@@ -1,45 +1,61 @@
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+import api from "./src/services/api.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Mock user database
-const users = {
-  admin: {
-    email: 'admin@example.com',
-    password: 'admin123',
-    username: 'Admin User'
-  },
-  manager: {
-    email: 'manager@example.com',
-    password: 'manager123',
-    username: 'Manager User'
-  },
-  user: {
-    email: 'user@example.com',
-    password: 'user123',
-    username: 'Regular User'
-  }
-};
-
 // Login endpoints for different roles
-app.post('/api/:role/login', (req, res) => {
+app.post("/api/:role/login", async (req, res) => {
   const { role } = req.params;
   const { email, password } = req.body;
 
-  const user = users[role];
-  
-  if (user && user.email === email && user.password === password) {
-    res.json({ 
+  try {
+    // Use the api login method
+    const userData = await api.login(email, password, role);
+
+    res.json({
       success: true,
-      username: user.username
+      username: userData.username,
+      userId: userData.userId,
+      role: userData.role,
+      details: userData.details,
     });
-  } else {
-    res.status(401).json({ 
+  } catch (error) {
+    res.status(401).json({
       success: false,
-      message: 'Invalid credentials'
+      message: error.message || "Invalid credentials",
+    });
+  }
+});
+
+// Get user data endpoint
+app.get("/api/user/:userId/:role", async (req, res) => {
+  const { userId, role } = req.params;
+
+  try {
+    const userData = await api.getUserData(userId, role);
+    res.json(userData);
+  } catch (error) {
+    res.status(404).json({
+      success: false,
+      message: error.message || "User data not found",
+    });
+  }
+});
+
+// Get resource data endpoint
+app.get("/api/:resourceType/:id?", async (req, res) => {
+  const { resourceType, id } = req.params;
+
+  try {
+    const data = await api.getData(resourceType, id);
+    res.json(data);
+  } catch (error) {
+    res.status(404).json({
+      success: false,
+      message: error.message || "Resource not found",
     });
   }
 });

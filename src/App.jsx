@@ -1,65 +1,149 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login.jsx';
-import Dashboard from './components/Dashboard.jsx';
-import LandingPage from './components/LandingPage.jsx';
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
+import Login from "./components/Login.jsx";
+import LandingPage from "./components/LandingPage.jsx";
+import DesignerLayout from "./components/DesignerLayout.jsx";
+import Dashboard from "./components/Dashboard.jsx";
+import authService from "./services/authService.js";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
-  const [userRole, setUserRole] = useState('');
+  const [username, setUsername] = useState("");
+  const [userRole, setUserRole] = useState("");
+  const [userId, setUserId] = useState("");
+  const navigate = useNavigate(); // For navigation after login
 
-  const handleLoginSuccess = (user, role) => {
+  // Check if user is already authenticated
+  useEffect(function () {
+    async function checkAuth() {
+      const user = authService.getUser(); // Fetch stored user data
+      if (user) {
+        setIsAuthenticated(true);
+        setUsername(user.username);
+        setUserRole(user.role.toLowerCase());
+        setUserId(user.id);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  function handleLoginSuccess(user, role, id) {
     setIsAuthenticated(true);
     setUsername(user);
-    setUserRole(role);
-  };
+    setUserRole(role.toLowerCase());
+    setUserId(id);
 
-  // Protected Route wrapper component
-  const ProtectedRoute = ({ children, allowedRole }) => {
-    if (!isAuthenticated || userRole !== allowedRole) {
+    // Redirect to respective dashboard
+    navigate(`/${role.toLowerCase()}/dashboard`);
+  }
+
+  function handleLogout() {
+    authService.logout();
+    setIsAuthenticated(false);
+    setUsername("");
+    setUserRole("");
+    setUserId("");
+    navigate("/login");
+  }
+
+  // Protected Route wrapper
+  function ProtectedRoute({ children, allowedRoles }) {
+    console.log("ProtectedRoute rendered for role:", userRole);
+    if (!isAuthenticated || !allowedRoles.includes(userRole)) {
       return <Navigate to="/login" />;
     }
     return <>{children}</>;
-  };
+  }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<LandingPage />} />
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? (
+            <Navigate to={`/${userRole}/dashboard`} />
+          ) : (
+            <Login onLoginSuccess={handleLoginSuccess} />
+          )
+        }
+      />
+
+      {/* Protected Routes for different roles */}
+
+      <Route
+        path="/designer/*"
+        element={
+          <ProtectedRoute allowedRoles={["designer"]}>
+            <DesignerLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route
-          path="/login"
+          path="dashboard"
           element={
-            isAuthenticated ?
-              <Navigate to={`/${userRole.toLowerCase()}/dashboard`} /> :
-              <Login onLoginSuccess={handleLoginSuccess} />
+            <Dashboard
+              username={username}
+              userId={userId}
+              onLogout={handleLogout}
+            />
           }
         />
+        <Route path="clients" element={<p>clients</p>} />
+        <Route path="projects" element={<p>projects</p>} />
+        <Route path="vendors" element={<p>vendors</p>} />
+        <Route path="*" element={<Navigate to="dashboard" />} />
+      </Route>
 
-        {/* Protected Routes */}
-        <Route path="/admin/*" element={
-          <ProtectedRoute allowedRole="admin">
-            <Dashboard username={username} role="admin" />
+      <Route
+        path="/client/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["client"]}>
+            <Dashboard
+              username={username}
+              userId={userId}
+              onLogout={handleLogout}
+            />
           </ProtectedRoute>
-        } />
+        }
+      />
 
-        <Route path="/manager/*" element={
-          <ProtectedRoute allowedRole="manager">
-            <Dashboard username={username} role="manager" />
+      <Route
+        path="/vendor/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["vendor"]}>
+            <Dashboard
+              username={username}
+              userId={userId}
+              onLogout={handleLogout}
+            />
           </ProtectedRoute>
-        } />
+        }
+      />
 
-        <Route path="/user/*" element={
-          <ProtectedRoute allowedRole="user">
-            <Dashboard username={username} role="user" />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Dashboard
+              username={username}
+              userId={userId}
+              onLogout={handleLogout}
+            />
           </ProtectedRoute>
-        } />
+        }
+      />
 
-        {/* Catch-all route */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
+      {/* Catch-all route */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
