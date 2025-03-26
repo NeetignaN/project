@@ -1,0 +1,31 @@
+{
+  "projects": [
+    {
+      "id": "project_001",
+      "title": "Acme Office Redesign",
+      "client_id": "client_001",
+      "designer_id": "designer_001",
+      "status": "completed",
+      "budget": 25000,
+      "timeline": {
+        "start": "2023-06-01",
+        "estimated_end": "2023-09-30",
+        "actual_end": "2023-10-15"
+      },
+      "used_products": ["product_001", "product_003"]
+    },
+    {
+      "id": "project_002",
+      "title": "Stark R&D Lab",
+      "client_id": "client_002",
+      "designer_id": "designer_002",
+      "status": "in_progress",
+      "budget": 85000,
+      "timeline": {
+        "start": "2023-11-10",
+        "estimated_end": "2024-05-20"
+      },
+      "used_products": ["product_005", "product_007"]
+    }
+  ]
+}

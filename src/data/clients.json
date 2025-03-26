@@ -1,0 +1,32 @@
+{
+  "clients": [
+    {
+      "id": "client_001",
+      "name": "Acme Corporation",
+      "contact_person": "John Smith",
+      "email": "john@acme.com",
+      "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a",
+      "company": {
+        "name": "Acme Corporation",
+        "address": "123 Business Ave, New York",
+        "tax_id": "US-123456789"
+      },
+      "projects": ["project_001", "project_003"],
+      "total_spend": 58200
+    },
+    {
+      "id": "client_002",
+      "name": "Stark Industries",
+      "contact_person": "Pepper Potts",
+      "email": "pepper@stark.com",
+      "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
+      "company": {
+        "name": "Stark Industries",
+        "address": "2000 Avengers Tower, NYC",
+        "tax_id": "US-987654321"
+      },
+      "projects": ["project_002"],
+      "total_spend": 124000
+    }
+  ]
+}
