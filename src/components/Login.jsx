@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
-import styles from './Login.module.css';
+import React, { useState } from "react";
+import { AlertCircle } from "lucide-react";
+import styles from "./Login.module.css";
 
 function Login({ onLoginSuccess }) {
-  const [role, setRole] = useState('user');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [role, setRole] = useState("user");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       const response = await fetch(`/api/${role}/login`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -28,10 +28,10 @@ function Login({ onLoginSuccess }) {
       if (response.ok) {
         onLoginSuccess(data.username, role);
       } else {
-        setError(data.message || 'Login failed. Please try again.');
+        setError(data.message || "Login failed. Please try again.");
       }
     } catch (err) {
-      setError('Network error. Please try again later.');
+      setError("Network error. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -41,9 +41,7 @@ function Login({ onLoginSuccess }) {
     <div className={styles.container}>
       <div className={styles.formContainer}>
         <div>
-          <h2 className={styles.title}>
-            Sign in to your account
-          </h2>
+          <h2 className={styles.title}>Sign in to your account</h2>
         </div>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
@@ -109,7 +107,7 @@ function Login({ onLoginSuccess }) {
               disabled={isLoading}
               className={styles.button}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
           </div>
         </form>
