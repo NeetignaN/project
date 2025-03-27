@@ -1,0 +1,64 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    background-color: #13395e;
+    color: white;
+    padding: 15px;
+    font-size: 1.5rem;
+    height: 60px;
+    /* Fixed height for the header */
+    z-index: 1001;
+    position: relative;
+}
+
+.logoContainer {
+    display: flex;
+    align-items: center;
+}
+
+.hamburger {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.logo {
+    font-weight: bold;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    position: absolute;
+    top: 60px;
+    /* Starts below header */
+    left: 0;
+    height: calc(100vh - 60px);
+    /* Adjusted to not overlap header */
+    width: 250px;
+    background-color: #1a1a2e;
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.collapsed {
+    transform: translateX(-100%);
+}
+
+/* Content remains static */
+.content {
+    flex: 1;
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: calc(100vh - 60px);
+    /* Adjust for header */
+}

@@ -40,7 +40,7 @@ function App() {
     setUserId(id);
 
     // Redirect to respective dashboard
-    navigate(`/${role.toLowerCase()}/dashboard`);
+    navigate(`/${role.toLowerCase()}/dashboard`, { replace: true });
   }
 
   function handleLogout() {
@@ -69,7 +69,7 @@ function App() {
         path="/login"
         element={
           isAuthenticated ? (
-            <Navigate to={`/${userRole}/dashboard`} />
+            <Navigate to={`/${userRole}/dashboard`} replace />
           ) : (
             <Login onLoginSuccess={handleLoginSuccess} />
           )
@@ -99,7 +99,10 @@ function App() {
         <Route path="clients" element={<p>clients</p>} />
         <Route path="projects" element={<p>projects</p>} />
         <Route path="vendors" element={<p>vendors</p>} />
-        <Route path="*" element={<Navigate to="dashboard" />} />
+        <Route
+          path="*"
+          element={<Navigate to="/designer/dashboard" replace />}
+        />
       </Route>
 
       <Route
