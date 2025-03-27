@@ -2,23 +2,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 :root {
-  --color-primary: #9f8665;
+  --color-brand-dark: #3E362E;
+  --color-brand-primary: #865D36;
+  --color-brand-secondary: #93785B;
+  --color-brand-accent: #AC8968;
+  --color-brand-muted: #A69080;
+
   --color-primary-dark: #856c56;
-  --color-text: #4d4a43;
+  --color-primary: #9f8665;
+
+  --color-text: #3E362E;
   --color-text-light: #a19e96;
-  --color-bg: #fafafa;
-  --color-bg-alt: #f5f5f5;
+
   --color-border: #e0e0e0;
-  --color-planning: #e6f0ff;
+
+  --color-bg-alt: #f5f5f5;
+  --color-bg: #fafafa;
+
   --color-planning-text: #4d76cc;
-  --color-in-progress: #fff8e6;
+  --color-planning: #e6f0ff;
   --color-in-progress-text: #cc9c4d;
-  --color-review: #f5e6ff;
+  --color-in-progress: #fff8e6;
   --color-review-text: #9c4dcc;
-  --color-completed: #e6fff0;
+  --color-review: #f5e6ff;
   --color-completed-text: #4dcc7f;
-  --color-on-hold: #f2f2f2;
+  --color-completed: #e6fff0;
   --color-on-hold-text: #808080;
+  --color-on-hold: #f2f2f2;
+
   --font-heading: 'Playfair Display', serif;
   --font-body: 'Inter', sans-serif;
   --border-radius: 8px;

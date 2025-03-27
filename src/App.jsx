@@ -82,7 +82,7 @@ function App() {
         path="/designer/*"
         element={
           <ProtectedRoute allowedRoles={["designer"]}>
-            <DesignerLayout onLogout={handleLogout} />
+            <DesignerLayout onLogout={handleLogout} username={username} />
           </ProtectedRoute>
         }
       >

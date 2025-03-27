@@ -3,21 +3,22 @@
     flex-direction: column;
     height: 100vh;
     position: relative;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
 }
 
 .header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     background-color: #fff;
-    color: #4d4a43;
+    color: var(--color-text);
     padding: 15px 25px;
     font-size: 1.5rem;
     height: 70px;
     z-index: 1001;
     position: relative;
-    border-bottom: 1px solid #f0f0f0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow);
 }
 
 .logoContainer {
@@ -28,7 +29,7 @@
 .hamburger {
     background: none;
     border: none;
-    color: #4d4a43;
+    color: var(--color-text);
     font-size: 1.25rem;
     cursor: pointer;
     margin-right: 15px;
@@ -36,14 +37,47 @@
 }
 
 .hamburger:hover {
-    color: #9f8665;
+    color: var(--color-primary);
 }
 
 .logo {
     font-weight: 500;
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-heading);
     font-size: 1.5rem;
-    color: #9f8665;
+    color: var(--color-primary);
+}
+
+/* Header Right Section with Welcome Message and Avatar */
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.welcomeMessage {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.headerAvatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.headerAvatar:hover {
+    transform: scale(1.05);
 }
 
 /* Sidebar Styling */
@@ -183,18 +217,18 @@
 :global(.ps-menu-button) {
     padding: 15px 24px !important;
     font-size: 0.95rem !important;
-    color: #4d4a43 !important;
+    color: var(--color-text) !important;
     transition: all 0.2s ease !important;
     border-left: 3px solid transparent !important;
 }
 
 :global(.ps-menu-button:hover) {
     background-color: rgba(159, 134, 101, 0.08) !important;
-    color: #9f8665 !important;
+    color: var(--color-primary) !important;
 }
 
 :global(.ps-active) {
-    color: #9f8665 !important;
+    color: var(--color-primary) !important;
     font-weight: 500 !important;
 }
 

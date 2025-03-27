@@ -14,9 +14,23 @@ import {
 } from "react-icons/fi";
 import styles from "./DesignerLayout.module.css";
 
-function DesignerLayout({ onLogout }) {
+function DesignerLayout({ onLogout, username = "User" }) {
   const [collapsed, setCollapsed] = useState(true);
   const location = useLocation();
+
+  // Get the first name from the username
+  const firstName = username.split(" ")[0];
+
+  // Get initials for the avatar
+  const getInitials = (name) => {
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0))
+      .join("")
+      .toUpperCase();
+  };
+
+  const userInitials = getInitials(username);
 
   // Closes the sidebar when clicking outside
   const closeSidebar = (e) => {
@@ -52,6 +66,14 @@ function DesignerLayout({ onLogout }) {
             <FaBars />
           </button>
           <span className={styles.logo}>Interiora</span>
+        </div>
+
+        {/* Welcome message and avatar */}
+        <div className={styles.headerRight}>
+          <div className={styles.welcomeMessage}>Welcome, {firstName}!</div>
+          <div className={styles.headerAvatar}>
+            <div className={styles.avatarInitials}>{userInitials}</div>
+          </div>
         </div>
       </header>
 
@@ -152,10 +174,10 @@ function DesignerLayout({ onLogout }) {
             {!collapsed ? (
               <>
                 <div className={styles.profileAvatar}>
-                  <div className={styles.avatarInitials}>JD</div>
+                  <div className={styles.avatarInitials}>{userInitials}</div>
                 </div>
                 <div className={styles.profileInfo}>
-                  <div className={styles.profileName}>John Doe</div>
+                  <div className={styles.profileName}>{username}</div>
                   <div className={styles.profileRole}>Interior Designer</div>
                 </div>
                 <button className={styles.logoutButton} onClick={handleLogout}>
