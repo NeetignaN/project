@@ -13,6 +13,8 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import styles from "./DesignerLayout.module.css";
+import logo from "../assets/logo.png";
+console.log("Logo path:", logo);
 
 function DesignerLayout({ onLogout, username = "User" }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -63,7 +65,7 @@ function DesignerLayout({ onLogout, username = "User" }) {
               setCollapsed(!collapsed);
             }}
           >
-            <FaBars />
+            <img src={logo} alt="Logo" className={styles.logoButton} />
           </button>
           <span className={styles.logo}>Interiora</span>
         </div>
