@@ -82,18 +82,14 @@ function App() {
         path="/designer/*"
         element={
           <ProtectedRoute allowedRoles={["designer"]}>
-            <DesignerLayout />
+            <DesignerLayout onLogout={handleLogout} />
           </ProtectedRoute>
         }
       >
         <Route
           path="dashboard"
           element={
-            <Dashboard
-              username={username}
-              userId={userId}
-              onLogout={handleLogout}
-            />
+            <Dashboard username={username} role={userRole} userId={userId} />
           }
         />
         <Route path="clients" element={<p>clients</p>} />
@@ -109,11 +105,7 @@ function App() {
         path="/client/dashboard"
         element={
           <ProtectedRoute allowedRoles={["client"]}>
-            <Dashboard
-              username={username}
-              userId={userId}
-              onLogout={handleLogout}
-            />
+            <Dashboard username={username} role={userRole} userId={userId} />
           </ProtectedRoute>
         }
       />
@@ -122,11 +114,7 @@ function App() {
         path="/vendor/dashboard"
         element={
           <ProtectedRoute allowedRoles={["vendor"]}>
-            <Dashboard
-              username={username}
-              userId={userId}
-              onLogout={handleLogout}
-            />
+            <Dashboard username={username} role={userRole} userId={userId} />
           </ProtectedRoute>
         }
       />
@@ -135,11 +123,7 @@ function App() {
         path="/admin/dashboard"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <Dashboard
-              username={username}
-              userId={userId}
-              onLogout={handleLogout}
-            />
+            <Dashboard username={username} role={userRole} userId={userId} />
           </ProtectedRoute>
         }
       />

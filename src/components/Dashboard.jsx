@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./Dashboard.module.css";
 import api from "../services/api";
 
-function Dashboard({ username, role, userId, onLogout }) {
+function Dashboard({ username, role, userId }) {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,9 +32,6 @@ function Dashboard({ username, role, userId, onLogout }) {
           <span>
             Welcome, {username} ({role})
           </span>
-          <button className={styles.logoutButton} onClick={onLogout}>
-            Logout
-          </button>
         </div>
       </header>
 

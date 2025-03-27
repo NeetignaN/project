@@ -1,10 +1,13 @@
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
 :root {
-  --color-primary: #b68b59;
-  --color-primary-dark: #9d7444;
-  --color-text: #333333;
-  --color-text-light: #666666;
-  --color-bg: #ffffff;
-  --color-bg-alt: #f8f8f8;
+  --color-primary: #9f8665;
+  --color-primary-dark: #856c56;
+  --color-text: #4d4a43;
+  --color-text-light: #a19e96;
+  --color-bg: #fafafa;
+  --color-bg-alt: #f5f5f5;
   --color-border: #e0e0e0;
   --color-planning: #e6f0ff;
   --color-planning-text: #4d76cc;
@@ -55,7 +58,7 @@ button {
   cursor: pointer;
   border: none;
   outline: none;
-  background: red;
+  background: transparent;
   font-family: var(--font-body);
 }
 
