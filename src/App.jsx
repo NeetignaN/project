@@ -12,7 +12,13 @@ import DesignerLayout from "./components/DesignerLayout.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import authService from "./services/authService.js";
 
+// Main App Component
 function App() {
+  return <AppContent />;
+}
+
+// AppContent component that handles navigation and authentication
+function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [userRole, setUserRole] = useState("");
@@ -77,7 +83,6 @@ function App() {
       />
 
       {/* Protected Routes for different roles */}
-
       <Route
         path="/designer/*"
         element={

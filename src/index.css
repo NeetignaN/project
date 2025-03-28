@@ -34,6 +34,37 @@
   --font-body: 'Inter', sans-serif;
   --border-radius: 8px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  /* Brand Colors - Replace with your brand colors */
+  --primary-color: #4a6fa5;
+  --secondary-color: #166d89;
+  --accent-color: #48a9a6;
+
+  /* Dashboard specific colors */
+  --projects-color: #4a6fa5;
+  --projects-bg-color: #4a6ea51d;
+  --clients-color: #9c528b;
+  --clients-bg-color: #9c528b1d;
+  --deadlines-color: #e6af2e;
+  --deadlines-bg-color: #e6af2e1d;
+  --appointments-color: #48a9a6;
+  --appointments-bg-color: #48a9a61d;
+
+  /* Status colors */
+  --completed-color: #48a9a6;
+  --in-progress-color: #e6af2e;
+  --pending-color: #95a5a6;
+
+  /* Button colors */
+  --primary-btn-color: #4a6fa5;
+  --primary-btn-hover: #3a5f95;
+
+  /* Client colors */
+  --client-color: #9c528b;
+
+  /* Project colors */
+  --project-color: #4a6fa5;
+  --progress-color: #48a9a6;
 }
 
 * {

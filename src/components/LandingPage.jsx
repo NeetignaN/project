@@ -6,7 +6,7 @@ function LandingPage() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        <h1 className={styles.title}>Welcome to DECORFLOW</h1>
+        <h1 className={styles.title}>Welcome to Interiora</h1>
         <p className={styles.description}>
           A simple React application with role-based authentication.
         </p>

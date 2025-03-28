@@ -24,27 +24,27 @@ function DesignerLayout({ onLogout, username = "User" }) {
   const firstName = username.split(" ")[0];
 
   // Get initials for the avatar
-  const getInitials = (name) => {
+  function getInitials(name) {
     return name
       .split(" ")
       .map((part) => part.charAt(0))
       .join("")
       .toUpperCase();
-  };
+  }
 
   const userInitials = getInitials(username);
 
   // Closes the sidebar when clicking outside
-  const closeSidebar = (e) => {
+  function closeSidebar(e) {
     if (!collapsed && e.target.closest(`.${styles.sidebar}`) === null) {
       setCollapsed(true);
     }
-  };
+  }
 
   // Check if the current route is active
-  const isActive = (path) => {
+  function isActive(path) {
     return location.pathname.includes(path);
-  };
+  }
 
   // Handle logout
   const handleLogout = () => {
@@ -59,7 +59,6 @@ function DesignerLayout({ onLogout, username = "User" }) {
       <header className={styles.header}>
         <div className={styles.logoContainer}>
           <button
-            className={styles.hamburger}
             onClick={(e) => {
               e.stopPropagation();
               setCollapsed(!collapsed);
@@ -200,7 +199,7 @@ function DesignerLayout({ onLogout, username = "User" }) {
       </div>
 
       {/* Main Content */}
-      <div className={styles.content}>
+      <div className={`${styles.content} ${!collapsed ? styles.blurred : ""}`}>
         <Outlet />
       </div>
     </div>
