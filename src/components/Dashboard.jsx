@@ -8,8 +8,15 @@ import {
   FiCalendar,
   FiBarChart2,
   FiClock,
+  FiFolder,
+  FiDollarSign,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiArrowRight,
 } from "react-icons/fi";
 import SummaryCard from "./SummaryCard";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function Dashboard({ username, role, userId }) {
   const [userData, setUserData] = useState(null);
@@ -55,7 +62,10 @@ function Dashboard({ username, role, userId }) {
   const monthlyAppointments = 18; // This would be calculated from actual data
 
   // Filter active projects
-  const activeProjects = projects?.slice(0, 4) || [];
+  const activeProjects =
+    projects
+      ?.filter((project) => project.status === "in_progress")
+      .slice(0, 4) || [];
 
   // Filter recent clients
   const recentClients = clients?.slice(0, 4) || [];
@@ -63,6 +73,30 @@ function Dashboard({ username, role, userId }) {
   if (loading) {
     return <div className={styles.loading}>Loading dashboard...</div>;
   }
+
+  // Helper function for date formatting
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Helper function to get client name
+  const getClientName = (clientId) => {
+    const client = clients.find((c) => c.id === clientId);
+    return client?.name || "Unknown Client";
+  };
+
+  // Calculate progress for project
+  const calculateProgress = (project) => {
+    if (project.status === "completed") return 100;
+    if (project.status === "in_progress") return 30; // Mock value
+    return 0;
+  };
 
   return (
     <div className={styles.dashboardContainer}>
@@ -75,32 +109,33 @@ function Dashboard({ username, role, userId }) {
           </p>
         </div>
       </header>
+
       {/* Summary Cards */}
       <div className={styles.summaryCards}>
         <SummaryCard
           className={styles.card}
-          value={15}
+          value={projectCount}
           heading={"Projects"}
           bgColor={"--projects-bg-color"}
         >
           <FiBarChart2 style={{ color: "var(--projects-color)" }} />
         </SummaryCard>
         <SummaryCard
-          value={5}
+          value={clientCount}
           heading={"Clients"}
           bgColor={"--clients-bg-color"}
         >
           <FiUsers style={{ color: "var(--clients-color)" }} />
         </SummaryCard>
         <SummaryCard
-          value={10}
+          value={upcomingDeadlines}
           heading={"Upcoming Deadlines"}
           bgColor={"--deadlines-bg-color"}
         >
           <FiCalendar style={{ color: "var(--deadlines-color)" }} />
         </SummaryCard>
         <SummaryCard
-          value={17}
+          value={monthlyAppointments}
           heading={"Monthly Appointments"}
           bgColor={"--appointments-bg-color"}
         >
@@ -121,124 +156,203 @@ function Dashboard({ username, role, userId }) {
       </div>
 
       {/* Active Projects Section */}
-      <section className={styles.projectsSection}>
-        <div className={styles.sectionHeader}>
-          <h2>Active Projects</h2>
-          <a href="#" className={styles.viewAll}>
-            View All Projects
+      <section className="mt-4 mb-5">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2 className="h4 mb-0">Active Projects</h2>
+          <a
+            href="#"
+            className="btn btn-sm btn-outline-primary d-flex align-items-center"
+          >
+            View All Projects <FiArrowRight className="ms-2" />
           </a>
         </div>
-        <div className={styles.projectCards}>
-          {activeProjects.map((project) => {
-            // Calculate progress percentage
-            let progress = 0;
-            let statusClass = "";
 
-            if (project.status === "completed") {
-              progress = 100;
-              statusClass = styles.completed;
-            } else if (project.status === "in_progress") {
-              progress = 30; // Mock value, would be calculated based on timeline or tasks
-              statusClass = styles.inProgress;
-            } else {
-              statusClass = styles.pending;
-            }
+        <div className="row g-4">
+          {activeProjects.length === 0 ? (
+            <div className="col-12">
+              <div className="alert alert-info">No active projects found.</div>
+            </div>
+          ) : (
+            activeProjects.map((project) => {
+              const progress = calculateProgress(project);
 
-            // Find client name
-            const client = clients.find((c) => c.id === project.client_id);
-            const clientName = client ? client.name : "Unknown Client";
+              return (
+                <div key={project.id} className="col-md-6 col-lg-3">
+                  <div className="card h-100 shadow-sm">
+                    <div className="card-header bg-white d-flex justify-content-between align-items-center">
+                      <span className="badge bg-primary">In Progress</span>
+                      <small className="text-muted">ID: {project.id}</small>
+                    </div>
+                    <div className="card-body">
+                      <h5 className="card-title mb-3">{project.title}</h5>
 
-            // Format date
-            const date = project.timeline?.start
-              ? new Date(project.timeline.start).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
-              : "";
+                      <div className="mb-3">
+                        <div className="d-flex align-items-center mb-2">
+                          <span className="text-muted me-2">Client:</span>
+                          <strong>{getClientName(project.client_id)}</strong>
+                        </div>
 
-            return (
-              <div
-                key={project.id}
-                className={`${styles.projectCard} ${statusClass}`}
-              >
-                <h3>{project.title}</h3>
-                <div className={styles.projectStatus}>
-                  {project.status === "completed"
-                    ? "Completed"
-                    : project.status === "in_progress"
-                    ? "In Progress"
-                    : "Pending"}
-                </div>
-                <div className={styles.projectMeta}>
-                  <div className={styles.projectClient}>
-                    Client: {clientName}
+                        <div className="d-flex align-items-center mb-2">
+                          <FiDollarSign className="text-muted me-2" />
+                          <span>${project.budget?.toLocaleString() || 0}</span>
+                        </div>
+
+                        <div className="d-flex align-items-center mb-2">
+                          <FiCalendar className="text-muted me-2" />
+                          <span>{formatDate(project.timeline?.start)}</span>
+                        </div>
+
+                        {project.timeline?.estimated_end && (
+                          <div className="d-flex align-items-center">
+                            <FiClock className="text-muted me-2" />
+                            <span>
+                              Due: {formatDate(project.timeline.estimated_end)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-3">
+                        <div className="d-flex justify-content-between mb-1">
+                          <small>Progress</small>
+                          <small>{progress}%</small>
+                        </div>
+                        <div className="progress" style={{ height: "6px" }}>
+                          <div
+                            className="progress-bar bg-primary"
+                            role="progressbar"
+                            style={{ width: `${progress}%` }}
+                            aria-valuenow={progress}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="card-footer bg-white border-top-0">
+                      <a
+                        href="#"
+                        className="btn btn-sm btn-outline-primary w-100"
+                      >
+                        View Details
+                      </a>
+                    </div>
                   </div>
                 </div>
-                <div className={styles.progressWrapper}>
-                  <div className={styles.progressLabel}>Progress</div>
-                  <div className={styles.progressBar}>
-                    <div
-                      className={styles.progressFill}
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
-                  <div className={styles.progressPercent}>{progress}%</div>
-                </div>
-                <div className={styles.projectFooter}>
-                  <div className={styles.projectDate}>{date}</div>
-                  <a href="#" className={styles.detailsBtn}>
-                    Details
-                  </a>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </section>
-      {/* Recent Clients Section */}
-      <section className={styles.clientsSection}>
-        <div className={styles.sectionHeader}>
-          <h2>Recent Clients</h2>
-          <a href="#" className={styles.viewAll}>
-            View All Clients
+
+      {/* Active Clients Section */}
+      <section className="mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2 className="h4 mb-0">Recent Clients</h2>
+          <a
+            href="#"
+            className="btn btn-sm btn-outline-primary d-flex align-items-center"
+          >
+            View All Clients <FiArrowRight className="ms-2" />
           </a>
         </div>
-        <div className={styles.clientCards}>
-          {recentClients.map((client) => {
-            const initials = client.name
-              .split(" ")
-              .map((name) => name[0])
-              .join("")
-              .toUpperCase();
 
-            return (
-              <div key={client.id} className={styles.clientCard}>
-                <div className={styles.clientHeader}>
-                  <div className={styles.clientInitials}>{initials}</div>
-                  <div className={styles.clientInfo}>
-                    <h3>{client.name}</h3>
-                    <div className={styles.clientType}>Project</div>
+        <div className="row g-4">
+          {recentClients.length === 0 ? (
+            <div className="col-12">
+              <div className="alert alert-info">No clients found.</div>
+            </div>
+          ) : (
+            recentClients.map((client) => {
+              const initials = client.name
+                .split(" ")
+                .map((name) => name[0])
+                .join("")
+                .toUpperCase();
+
+              const projectCount = client.projects ? client.projects.length : 0;
+
+              return (
+                <div key={client.id} className="col-md-6 col-lg-3">
+                  <div className="card h-100 shadow-sm">
+                    <div className="card-body">
+                      <div className="d-flex align-items-center mb-3">
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            backgroundColor: "#6c5ce7",
+                            color: "white",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {initials}
+                        </div>
+                        <div>
+                          <h5 className="card-title mb-0">{client.name}</h5>
+                          <p className="card-subtitle text-muted small">
+                            {client.company?.name || ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <div className="d-flex align-items-center mb-2">
+                          <FiMail className="text-muted me-2" />
+                          <a
+                            href={`mailto:${client.email}`}
+                            className="text-decoration-none text-muted"
+                          >
+                            {client.email}
+                          </a>
+                        </div>
+
+                        {client.phone && (
+                          <div className="d-flex align-items-center mb-2">
+                            <FiPhone className="text-muted me-2" />
+                            <a
+                              href={`tel:${client.phone}`}
+                              className="text-decoration-none text-muted"
+                            >
+                              {client.phone}
+                            </a>
+                          </div>
+                        )}
+
+                        {client.company?.address && (
+                          <div className="d-flex align-items-center mb-2">
+                            <FiMapPin className="text-muted me-2" />
+                            <span className="small text-muted">
+                              {client.company.address}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="d-flex align-items-center">
+                          <FiFolder className="text-muted me-2" />
+                          <span className="small text-muted">
+                            {projectCount} Project
+                            {projectCount !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="card-footer bg-white border-top-0">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="badge bg-light text-dark">
+                          ${client.total_spend?.toLocaleString() || 0}
+                        </span>
+                        <a href="#" className="btn btn-sm btn-outline-primary">
+                          View Details
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className={styles.clientContact}>
-                  <div className={styles.clientEmail}>{client.email}</div>
-                  <div className={styles.clientPhone}>
-                    {client.phone || "(555) 123-4567"}
-                  </div>
-                  <div className={styles.clientLocation}>
-                    {client.company?.address?.split(",").pop() ||
-                      "New York, NY"}
-                  </div>
-                </div>
-                <div className={styles.clientFooter}>
-                  <a href="#" className={styles.viewDetailsBtn}>
-                    View Details
-                  </a>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </section>
     </div>

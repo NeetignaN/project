@@ -10,6 +10,8 @@ import Login from "./components/Login.jsx";
 import LandingPage from "./components/LandingPage.jsx";
 import DesignerLayout from "./components/DesignerLayout.jsx";
 import Dashboard from "./components/Dashboard.jsx";
+import Clients from "./components/Clients.jsx"; // Import new Clients component
+import Projects from "./components/Projects.jsx"; // Import new Projects component
 import authService from "./services/authService.js";
 
 // Main App Component
@@ -97,8 +99,18 @@ function AppContent() {
             <Dashboard username={username} role={userRole} userId={userId} />
           }
         />
-        <Route path="clients" element={<p>clients</p>} />
-        <Route path="projects" element={<p>projects</p>} />
+        <Route
+          path="clients"
+          element={
+            <Clients username={username} role={userRole} userId={userId} />
+          }
+        />
+        <Route
+          path="projects"
+          element={
+            <Projects username={username} role={userRole} userId={userId} />
+          }
+        />
         <Route path="vendors" element={<p>vendors</p>} />
         <Route
           path="*"
