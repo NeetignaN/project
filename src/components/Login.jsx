@@ -22,9 +22,15 @@ function Login({ onLoginSuccess }) {
       // console.log(email);
       // console.log(role);
       // console.log(password);
+      console.log(userData);
 
       // Login successful
-      onLoginSuccess(userData.username, role);
+      onLoginSuccess(
+        userData.username,
+        role,
+        userData.userId,
+        userData.details
+      );
     } catch (err) {
       // Display error message
       setError(err.message || "Login failed. Please try again.");

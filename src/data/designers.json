@@ -8,8 +8,7 @@
       "specializations": ["interior", "furniture"],
       "hourly_rate": 85,
       "portfolio": "https://emmawilson.design",
-      "vendor_connections": ["vendor_001", "vendor_003"],
-      "active_projects": 3
+      "vendor_connections": ["vendor_001", "vendor_003"]
     },
     {
       "id": "designer_002",
@@ -19,8 +18,7 @@
       "specializations": ["lighting", "industrial"],
       "hourly_rate": 95,
       "portfolio": "https://jamesrodriguez.design",
-      "vendor_connections": ["vendor_002"],
-      "active_projects": 2
+      "vendor_connections": ["vendor_002"]
     }
   ]
 }

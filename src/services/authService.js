@@ -4,6 +4,7 @@ const authService = {
   login: async function (email, password, role) {
     try {
       const response = await api.login(email, password, role);
+      console.log(response);
 
       if (response.success) {
         // Save user data to localStorage

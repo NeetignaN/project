@@ -25,9 +25,10 @@ function AppContent() {
   const [username, setUsername] = useState("");
   const [userRole, setUserRole] = useState("");
   const [userId, setUserId] = useState("");
+  const [userDetails, setUserDetails] = useState({});
   const navigate = useNavigate(); // For navigation after login
 
-  // Check if user is already authenticated
+  // Check if user is already authenticated on mount
   useEffect(function () {
     async function checkAuth() {
       const user = authService.getUser(); // Fetch stored user data
@@ -36,16 +37,23 @@ function AppContent() {
         setUsername(user.username);
         setUserRole(user.role.toLowerCase());
         setUserId(user.id);
+        setUserDetails(user.details);
       }
     }
     checkAuth();
   }, []);
 
-  function handleLoginSuccess(user, role, id) {
+  function handleLoginSuccess(user, role, id, details) {
     setIsAuthenticated(true);
     setUsername(user);
     setUserRole(role.toLowerCase());
     setUserId(id);
+    setUserDetails(details);
+
+    console.log(user);
+    console.log(role);
+    console.log(id);
+    console.log(details);
 
     // Redirect to respective dashboard
     navigate(`/${role.toLowerCase()}/dashboard`, { replace: true });
@@ -62,7 +70,7 @@ function AppContent() {
 
   // Protected Route wrapper
   function ProtectedRoute({ children, allowedRoles }) {
-    console.log("ProtectedRoute rendered for role:", userRole);
+    // console.log("ProtectedRoute rendered for role:", userRole);
     if (!isAuthenticated || !allowedRoles.includes(userRole)) {
       return <Navigate to="/login" />;
     }

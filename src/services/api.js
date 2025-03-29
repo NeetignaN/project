@@ -25,6 +25,9 @@ const api = {
         (role === "any" || u.role === role)
     );
 
+    // console.log(user);
+    // console.log(typeof user);
+
     if (!user) {
       throw new Error("Invalid email or password");
     }
@@ -36,18 +39,30 @@ const api = {
       case "client":
         userDetails = clients.clients.find((c) => c.id === user.id);
         break;
+      
       case "designer":
+        // console.log("Designers data:", designers); // Debugging
+        // console.log("Designers.designers:", designers.designers); // Debugging
+    
         userDetails = designers.designers.find((d) => d.id === user.id);
+    
+        console.log(userDetails); // Debugging
+        break;  
+      
       case "vendor":
         userDetails = vendors.vendors.find((v) => v.id === user.id);
         break;
+      
       case "admin":
         userDetails = admins.admins.find((a) => a.id === user.id);
         break;
+      
       default:
+        console.log("Invalid role:", user.role);
         break;
     }
-
+    
+    
     return {
       success: true,
       username: user.name,
