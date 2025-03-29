@@ -27,6 +27,48 @@
       },
       "projects": ["project_002"],
       "total_spend": 124000
+    },
+    {
+      "id": "client_003",
+      "name": "Greenwood Constructions",
+      "contact_person": "Michael Johnson",
+      "email": "michael@greenwood.com",
+      "avatar": "https://images.unsplash.com/photo-1589156191108-e0b5a1f4a86b",
+      "company": {
+        "name": "Greenwood Constructions",
+        "address": "45 Oak Street, Boston",
+        "tax_id": "US-564738291"
+      },
+      "projects": ["project_005", "project_007"],
+      "total_spend": 78000
+    },
+    {
+      "id": "client_005",
+      "name": "Luxury Living Inc.",
+      "contact_person": "Sophia Carter",
+      "email": "sophia@luxuryliving.com",
+      "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d",
+      "company": {
+        "name": "Luxury Living Inc.",
+        "address": "500 Sunset Blvd, Los Angeles",
+        "tax_id": "US-998877665"
+      },
+      "projects": ["project_006"],
+      "total_spend": 92000
+    },
+    {
+      "id": "client_007",
+      "name": "Heritage Museum Trust",
+      "contact_person": "Richard Brown",
+      "email": "richard@heritagemuseum.com",
+      "avatar": "https://images.unsplash.com/photo-1511367461989-f85a21fda167",
+      "company": {
+        "name": "Heritage Museum Trust",
+        "address": "789 Historic Rd, Washington D.C.",
+        "tax_id": "US-112233445"
+      },
+      "projects": ["project_008", "project_009"],
+      "total_spend": 63000
     }
   ]
 }

@@ -72,7 +72,7 @@ const api = {
     };
   },
 
-  // Get data based on resource type
+  // function for getting entire data of individual json files or if  ID is mentioned then data of that partical data info is fetched
   getData: async (resourceType, id = null) => {
     await delay(300); // Simulate network delay
 
@@ -115,6 +115,9 @@ const api = {
       case "conversations":
         data = messages.conversations;
         break;
+      case "credentials":
+        data = credentials.users;
+        break;
       default:
         throw new Error(`Unknown resource type: ${resourceType}`);
     }
@@ -131,115 +134,52 @@ const api = {
     await delay(300); // Simulate network delay
 
     const result = {
-      user: null,
       projects: [],
+      clients: [],
+      messages: [],
       orders: [],
-      conversations: [],
+      vendors: [],
+      designers: [],
+      credentials: []
     };
 
-    // Get user details
     switch (userRole) {
-      case "client":
-        result.user = clients.clients.find((c) => c.id === userId);
-        if (result.user) {
-          result.projects = projects.projects.filter(
-            (p) => p.client_id === userId
-          );
-        }
-        break;
       case "designer":
-        result.user = designers.designers.find((d) => d.id === userId);
-        if (result.user) {
-          result.projects = projects.projects.filter(
-            (p) => p.designer_id === userId
-          );
-        }
+        result.projects = projects.projects.filter(p => p.designer_id === userId);
+        result.clients = Array.from(new Set(result.projects.map(p => p.client_id)))
+  .map(clientId => clients.clients.find(c => c.id === clientId));
+
+        result.messages = messages.conversations.filter(c => c.participants.includes(userId));
+        result.orders = orders.orders.filter(o => o.designer_id === userId);
+        result.vendors = vendors.vendors.filter(v =>
+          designers.designers.find(d => d.id === userId)?.vendor_connections.includes(v.id)
+        );
         break;
+
+      case "client":
+        result.projects = projects.projects.filter(p => p.client_id === userId);
+        result.messages = messages.conversations.filter(c => c.participants.includes(userId));
+        break;
+
       case "vendor":
-        result.user = vendors.vendors.find((v) => v.id === userId);
+        result.messages = messages.conversations.filter(c => c.participants.includes(userId));
+        result.products = products.products.filter(p => p.vendor_id === userId);
         break;
+
       case "admin":
-        result.user = admins.admins.find((a) => a.id === userId);
+        result.credentials = credentials.users;
+        result.designers = designers.designers;
+        result.clients = clients.clients;
+        result.vendors = vendors.vendors;
         break;
+
       default:
-        break;
+        throw new Error(`Invalid role: ${userRole}`);
     }
-
-    if (!result.user) {
-      throw new Error(`User not found: ${userId} with role ${userRole}`);
-    }
-
-    // Get user orders
-    result.orders = orders.orders.filter((o) => {
-      if (userRole === "client") return o.client_id === userId;
-      if (userRole === "designer") return o.designer_id === userId;
-      if (userRole === "vendor") return o.vendor_id === userId;
-      return false; // Admins don't have specific orders
-    });
-
-    // Get user conversations
-    result.conversations = messages.conversations.filter((c) =>
-      c.participants.includes(userId)
-    );
-
+ console.log(result);
     return result;
-  },
-  fetchProjectsAndClients: async (designerId) => {
-    await delay(300); // Simulate network delay
-
-    // Get projects assigned to the designer
-    const assignedProjects = projects.projects.filter(
-      (project) => project.designer_id === designerId
-    );
-
-    if (!assignedProjects.length) {
-      throw new Error(`No projects found for designer: ${designerId}`);
-    }
-
-    // Get unique client IDs from the projects
-    const clientIds = [...new Set(assignedProjects.map((p) => p.client_id))];
-
-    // Fetch clients related to the designer's projects
-    const relatedClients = clients.clients.filter((client) =>
-      clientIds.includes(client.id)
-    );
-
-    console.log(assignedProjects);
-    console.log(relatedClients);
-
-    return {
-      projects: assignedProjects,
-      clients: relatedClients,
-    };
-  },
-
-  fetchActiveProjects: async (designerId) => {
-    await delay(300); // Simulate network delay
-
-    // Get the designer's details
-    const designer = designers.designers.find((d) => d.id === designerId);
-
-    if (!designer) {
-      throw new Error(`Designer not found: ${designerId}`);
-    }
-
-    // Fetch active projects
-    const activeProjects = projects.projects.filter(
-      (p) => p.designer_id === designerId && p.status === "active"
-    );
-
-    // Fetch clients related to active projects
-    const clientIds = [...new Set(activeProjects.map((p) => p.client_id))];
-    const activeClients = clients.clients.filter((c) =>
-      clientIds.includes(c.id)
-    );
-
-    return {
-      designer,
-      activeProjects,
-      clients: activeClients,
-    };
-  },
+},
+  
 };
 
 

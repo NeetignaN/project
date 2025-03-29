@@ -50,10 +50,10 @@ function AppContent() {
     setUserId(id);
     setUserDetails(details);
 
-    console.log(user);
-    console.log(role);
-    console.log(id);
-    console.log(details);
+    // console.log(user);
+    // console.log(role);
+    // console.log(id);
+    // console.log(details);
 
     // Redirect to respective dashboard
     navigate(`/${role.toLowerCase()}/dashboard`, { replace: true });
@@ -104,7 +104,12 @@ function AppContent() {
         <Route
           path="dashboard"
           element={
-            <Dashboard username={username} role={userRole} userId={userId} />
+            <Dashboard
+              username={username}
+              role={userRole}
+              userId={userId}
+              userDetails={userDetails}
+            />
           }
         />
         <Route
