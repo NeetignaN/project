@@ -1,12 +1,13 @@
-import credentials from "../data/credentials.json" assert { type: "json" };
-import admins from "../data/admins.json" assert { type: "json" };
-import clients from "../data/clients.json" assert { type: "json" };
-import designers from "../data/designers.json" assert { type: "json" };
-import vendors from "../data/vendors.json" assert { type: "json" };
-import projects from "../data/projects.json" assert { type: "json" };
-import products from "../data/products.json" assert { type: "json" };
-import orders from "../data/orders.json" assert { type: "json" };
-import messages from "../data/messages.json" assert { type: "json" };
+import credentials from "../data/credentials.json" with { type: "json" };
+import admins from "../data/admins.json" with { type: "json" };
+import clients from "../data/clients.json" with { type: "json" };
+import designers from "../data/designers.json" with { type: "json" };
+import vendors from "../data/vendors.json" with { type: "json" };
+import projects from "../data/projects.json" with { type: "json" };
+import products from "../data/products.json" with { type: "json" };
+import orders from "../data/orders.json" with { type: "json" };
+import messages from "../data/messages.json" with { type: "json" };
+import { CloudLightning } from "lucide-react";
 
 // Simulated delay to mimic real API calls
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,7 +38,6 @@ const api = {
         break;
       case "designer":
         userDetails = designers.designers.find((d) => d.id === user.id);
-        break;
       case "vendor":
         userDetails = vendors.vendors.find((v) => v.id === user.id);
         break;
@@ -169,6 +169,63 @@ const api = {
 
     return result;
   },
+  fetchProjectsAndClients: async (designerId) => {
+    await delay(300); // Simulate network delay
+
+    // Get projects assigned to the designer
+    const assignedProjects = projects.projects.filter(
+      (project) => project.designer_id === designerId
+    );
+
+    if (!assignedProjects.length) {
+      throw new Error(`No projects found for designer: ${designerId}`);
+    }
+
+    // Get unique client IDs from the projects
+    const clientIds = [...new Set(assignedProjects.map((p) => p.client_id))];
+
+    // Fetch clients related to the designer's projects
+    const relatedClients = clients.clients.filter((client) =>
+      clientIds.includes(client.id)
+    );
+
+    console.log(assignedProjects);
+    console.log(relatedClients);
+
+    return {
+      projects: assignedProjects,
+      clients: relatedClients,
+    };
+  },
+
+  fetchActiveProjects: async (designerId) => {
+    await delay(300); // Simulate network delay
+
+    // Get the designer's details
+    const designer = designers.designers.find((d) => d.id === designerId);
+
+    if (!designer) {
+      throw new Error(`Designer not found: ${designerId}`);
+    }
+
+    // Fetch active projects
+    const activeProjects = projects.projects.filter(
+      (p) => p.designer_id === designerId && p.status === "active"
+    );
+
+    // Fetch clients related to active projects
+    const clientIds = [...new Set(activeProjects.map((p) => p.client_id))];
+    const activeClients = clients.clients.filter((c) =>
+      clientIds.includes(c.id)
+    );
+
+    return {
+      designer,
+      activeProjects,
+      clients: activeClients,
+    };
+  },
 };
+
 
 export default api;

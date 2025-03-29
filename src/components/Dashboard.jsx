@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styles from "./Dashboard.module.css";
-import api from "../services/api";
+import api from "../services/api.js";
 import {
   FiUser,
   FiPlus,
