@@ -19,21 +19,42 @@ import api from "../services/api.js";
 
 function DesignerDashboard({ userDetails, userId, role }) {
   const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [conversations, setConversations] = useState([]);
+
+  // Safely load data from localStorage with fallback to an empty array
+  const safeParse = (key) => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : [];
+    } catch (error) {
+      console.error(`Error parsing localStorage key "${key}":`, error);
+      return [];
+    }
+  };
+
+  const [projects, setProjects] = useState(() => safeParse("projects"));
+  const [clients, setClients] = useState(() => safeParse("clients"));
+  // const [conversations, setConversations] = useState(() =>
+  // safeParse("conversations"));
 
   useEffect(() => {
-    setLoading(true);
-    // Fetch user data when component mounts
     const fetchDesignerData = async () => {
       try {
         if (userId) {
-          // Fetching data
+          // Fetching data from the API
           const data = await api.getUserData(userId, role);
+
+          // Save data to state and localStorage
           setProjects(data.projects);
+          localStorage.setItem("projects", JSON.stringify(data.projects));
+
           setClients(data.clients);
-          setConversations(data.conversations);
+          localStorage.setItem("clients", JSON.stringify(data.clients));
+
+          // setConversations(data.conversations);
+          // localStorage.setItem(
+          //   "conversations",
+          //   JSON.stringify(data.conversations)
+          // );
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -41,7 +62,22 @@ function DesignerDashboard({ userDetails, userId, role }) {
         setLoading(false);
       }
     };
-    fetchDesignerData();
+
+    // Check if data already exists in localStorage
+    const storedProjects = localStorage.getItem("projects");
+    const storedClients = localStorage.getItem("clients");
+    // const storedConversations = localStorage.getItem("conversations");
+
+    if (!storedProjects || !storedClients) {
+      // Fetch data from the API if not already in localStorage
+      fetchDesignerData();
+    } else {
+      // Load data from localStorage into state
+      setProjects(JSON.parse(storedProjects));
+      setClients(JSON.parse(storedClients));
+      // setConversations(JSON.parse(storedConversations));
+      setLoading(false);
+    }
   }, [userId, role]);
 
   // Calculate summary statistics
@@ -91,7 +127,6 @@ function DesignerDashboard({ userDetails, userId, role }) {
     if (project.status === "in_progress") return 30; // Mock value
     return 0;
   };
-
   return (
     <>
       <div className={styles.summaryCards}>
