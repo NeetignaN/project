@@ -3,36 +3,40 @@ import api from "../services/api.js";
 import { FiUser, FiMail, FiPhone, FiMapPin, FiFolder } from "react-icons/fi";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Clients.module.css";
+import { useDesignerData } from "../contexts/DesignerDataContext";
 
 function Clients({ username, role, userId }) {
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [clients, setClients] = useState([]);
+  const { clients } = useDesignerData();
+  console.log(clients);
 
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getData("clients");
-        setClients(data);
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-        setError("Failed to load clients. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState(null);
 
-    fetchClients();
-  }, []);
+  // useEffect(() => {
+  //   const fetchClients = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const data = await api.getData("clients");
+  //       setClients(data);
+  //     } catch (error) {
+  //       console.error("Error fetching clients:", error);
+  //       setError("Failed to load clients. Please try again later.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-  if (loading) {
-    return <div className="text-center py-5">Loading clients...</div>;
-  }
+  //   fetchClients();
+  // }, []);
 
-  if (error) {
-    return <div className="alert alert-danger m-3">{error}</div>;
-  }
+  // if (loading) {
+  //   return <div className="text-center py-5">Loading clients...</div>;
+  // }
+
+  // if (error) {
+  //   return <div className="alert alert-danger m-3">{error}</div>;
+  // }
 
   if (clients.length === 0) {
     return <div className="alert alert-info m-3">No clients found.</div>;

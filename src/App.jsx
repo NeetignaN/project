@@ -1,3 +1,5 @@
+import { DesignerDataProvider } from "./contexts/DesignerDataContext.jsx";
+
 import React, { useState, useEffect } from "react";
 import {
   BrowserRouter,
@@ -65,6 +67,9 @@ function AppContent() {
     setUsername("");
     setUserRole("");
     setUserId("");
+
+    localStorage.clear();
+
     navigate("/login");
   }
 
@@ -97,7 +102,9 @@ function AppContent() {
         path="/designer/*"
         element={
           <ProtectedRoute allowedRoles={["designer"]}>
-            <DesignerLayout onLogout={handleLogout} username={username} />
+            <DesignerDataProvider>
+              <DesignerLayout onLogout={handleLogout} username={username} />
+            </DesignerDataProvider>
           </ProtectedRoute>
         }
       >

@@ -3,43 +3,48 @@ import api from "../services/api.js";
 import { FiCalendar, FiClock, FiDollarSign, FiPlus } from "react-icons/fi";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Projects.module.css";
+import { useDesignerData } from "../contexts/DesignerDataContext";
 
 function Projects({ username, role, userId }) {
-  const [projects, setProjects] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { projects, clients } = useDesignerData();
+  console.log("Projects in Projects Component:", projects);
+  console.log("Clients in Projects Component:", clients);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  // const [projects, setProjects] = useState([]);
+  // const [clients, setClients] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState(null);
 
-        // Fetch projects data
-        const projectsData = await api.getData("projects");
-        setProjects(projectsData);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       setLoading(true);
 
-        // Fetch clients data for project client names
-        const clientsData = await api.getData("clients");
-        setClients(clientsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load projects. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       // Fetch projects data
+  //       const projectsData = await api.getData("projects");
+  //       setProjects(projectsData);
 
-    fetchData();
-  }, []);
+  //       // Fetch clients data for project client names
+  //       const clientsData = await api.getData("clients");
+  //       setClients(clientsData);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //       setError("Failed to load projects. Please try again later.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-  if (loading) {
-    return <div className="text-center py-5">Loading projects...</div>;
-  }
+  //   fetchData();
+  // }, []);
 
-  if (error) {
-    return <div className="alert alert-danger m-3">{error}</div>;
-  }
+  // if (loading) {
+  //   return <div className="text-center py-5">Loading projects...</div>;
+  // }
+
+  // if (error) {
+  //   return <div className="alert alert-danger m-3">{error}</div>;
+  // }
 
   if (projects.length === 0) {
     return <div className="alert alert-info m-3">No projects found.</div>;
@@ -49,7 +54,7 @@ function Projects({ username, role, userId }) {
     switch (status) {
       case "completed":
         return "bg-success";
-      case "in_progress":
+      case "active":
         return "bg-primary";
       default:
         return "bg-secondary";
@@ -60,7 +65,7 @@ function Projects({ username, role, userId }) {
     switch (status) {
       case "completed":
         return "Completed";
-      case "in_progress":
+      case "active":
         return "In Progress";
       default:
         return "Pending";

@@ -199,9 +199,9 @@ function DesignerLayout({ onLogout, username = "User" }) {
       </div>
 
       {/* Main Content */}
-      <div className={`${styles.content} ${!collapsed ? styles.blurred : ""}`}>
+      <main className={`${styles.content} ${!collapsed ? styles.blurred : ""}`}>
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }

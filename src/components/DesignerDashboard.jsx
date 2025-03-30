@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDesignerData } from "../contexts/DesignerDataContext";
 import {
   FiUser,
   FiPlus,
@@ -18,67 +19,110 @@ import styles from "./DesignerDashBoard.module.css";
 import api from "../services/api.js";
 
 function DesignerDashboard({ userDetails, userId, role }) {
-  const [loading, setLoading] = useState(false);
-
-  // Safely load data from localStorage with fallback to an empty array
-  const safeParse = (key) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : [];
-    } catch (error) {
-      console.error(`Error parsing localStorage key "${key}":`, error);
-      return [];
-    }
-  };
-
-  const [projects, setProjects] = useState(() => safeParse("projects"));
-  const [clients, setClients] = useState(() => safeParse("clients"));
-  // const [conversations, setConversations] = useState(() =>
-  // safeParse("conversations"));
-
+  const { projects, setProjects, clients, setClients } = useDesignerData();
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchDesignerData = async () => {
       try {
-        if (userId) {
-          // Fetching data from the API
+        setLoading(true);
+
+        if (userId && projects.length === 0 && clients.length === 0) {
+          // Fetch data from the API only if context data is empty
           const data = await api.getUserData(userId, role);
 
-          // Save data to state and localStorage
+          // Save data to context
           setProjects(data.projects);
-          localStorage.setItem("projects", JSON.stringify(data.projects));
-
           setClients(data.clients);
-          localStorage.setItem("clients", JSON.stringify(data.clients));
 
-          // setConversations(data.conversations);
-          // localStorage.setItem(
-          //   "conversations",
-          //   JSON.stringify(data.conversations)
-          // );
+          console.log("Fetched Projects from API:", data.projects);
+          console.log("Fetched Clients from API:", data.clients);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching data from API:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Ensure loading is set to false after fetching
       }
     };
 
-    // Check if data already exists in localStorage
-    const storedProjects = localStorage.getItem("projects");
-    const storedClients = localStorage.getItem("clients");
-    // const storedConversations = localStorage.getItem("conversations");
+    fetchDesignerData();
+  }, [userId, role, projects.length, clients.length, setProjects, setClients]);
 
-    if (!storedProjects || !storedClients) {
-      // Fetch data from the API if not already in localStorage
-      fetchDesignerData();
-    } else {
-      // Load data from localStorage into state
-      setProjects(JSON.parse(storedProjects));
-      setClients(JSON.parse(storedClients));
-      // setConversations(JSON.parse(storedConversations));
-      setLoading(false);
-    }
-  }, [userId, role]);
+  // Safely load data from localStorage with fallback to an empty array
+  // const safeParse = (key) => {
+  //   try {
+  //     const item = localStorage.getItem(key);
+  //     return item ? JSON.parse(item) : [];
+  //   } catch (error) {
+  //     console.error(`Error parsing localStorage key "${key}":`, error);
+  //     return [];
+  //   }
+  // };
+
+  // const [projects, setProjects] = useState(() => safeParse("projects"));
+  // const [clients, setClients] = useState(() => safeParse("clients"));
+  // const [conversations, setConversations] = useState(() =>
+  // safeParse("conversations"));
+
+  // useEffect(() => {
+  //   const fetchDesignerData = async () => {
+  //     try {
+  //       if (userId) {
+  //         // Fetching data from the API
+  //         const data = await api.getUserData(userId, role);
+
+  //         // Save data to state and localStorage
+  //         setProjects(data.projects);
+  //         // console.log("Fetched Projects:", data.projects);
+  //         localStorage.setItem("projects", JSON.stringify(data.projects));
+
+  //         setClients(data.clients);
+  //         // console.log("Fetched Clients:", data.clients);
+  //         localStorage.setItem("clients", JSON.stringify(data.clients));
+
+  //         // setConversations(data.conversations);
+  //         // localStorage.setItem(
+  //         //   "conversations",
+  //         //   JSON.stringify(data.conversations)
+  //         // );
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  // Check if data already exists in localStorage
+  //   const storedProjects = localStorage.getItem("projects");
+  //   const storedClients = localStorage.getItem("clients");
+  //   // const storedConversations = localStorage.getItem("conversations");
+
+  //   if (!storedProjects || !storedClients) {
+  //     // Fetch data from the API if not already in localStorage
+  //     fetchDesignerData();
+  //   } else {
+  //     // Load data from localStorage into state
+  //     setProjects(JSON.parse(storedProjects));
+  //     setClients(JSON.parse(storedClients));
+  //     // setConversations(JSON.parse(storedConversations));
+  //     setLoading(false);
+  //   }
+  // }, [userId, role]);
+
+  // Check if data already exists in localStorage
+  //   const storedProjects = safeParse("projects");
+  //   const storedClients = safeParse("clients");
+
+  //   if (storedProjects.length > 0 && storedClients.length > 0) {
+  //     // Load data from localStorage into context
+  //     setProjects(storedProjects);
+  //     setClients(storedClients);
+  //     setLoading(false);
+  //   } else {
+  //     // Fetch data from the API if not already in localStorage
+  //     fetchDesignerData();
+  //   }
+  // }, [userId, role, setProjects, setClients]);
 
   // Calculate summary statistics
   const projectCount = projects?.length || 0;
@@ -94,11 +138,13 @@ function DesignerDashboard({ userDetails, userId, role }) {
   const activeProjects =
     projects?.filter((project) => project.status === "active").slice(0, 4) ||
     [];
-  console.log(projects);
   console.log(activeProjects);
+  console.log(projects);
 
   // Filter recent clients
   const recentClients = clients?.slice(0, 4) || [];
+  console.log(clients);
+  console.log(recentClients);
 
   if (loading) {
     return <div className={styles.loading}>Loading dashboard...</div>;
