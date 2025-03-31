@@ -114,7 +114,7 @@
 }
 
 .content.blurred {
-    filter: blur(4px);
+    filter: blur(3px);
     pointer-events: none;
 }
 

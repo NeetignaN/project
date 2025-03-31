@@ -14,6 +14,7 @@ import DesignerLayout from "./components/DesignerLayout.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import Clients from "./components/Clients.jsx"; // Import new Clients component
 import Projects from "./components/Projects.jsx"; // Import new Projects component
+import Messages from "./components/Messages.jsx"; // Import new Messages component
 import authService from "./services/authService.js";
 
 // Main App Component
@@ -52,11 +53,6 @@ function AppContent() {
     setUserId(id);
     setUserDetails(details);
 
-    // console.log(user);
-    // console.log(role);
-    // console.log(id);
-    // console.log(details);
-
     // Redirect to respective dashboard
     navigate(`/${role.toLowerCase()}/dashboard`, { replace: true });
   }
@@ -75,7 +71,6 @@ function AppContent() {
 
   // Protected Route wrapper
   function ProtectedRoute({ children, allowedRoles }) {
-    // console.log("ProtectedRoute rendered for role:", userRole);
     if (!isAuthenticated || !allowedRoles.includes(userRole)) {
       return <Navigate to="/login" />;
     }
@@ -129,6 +124,12 @@ function AppContent() {
           path="projects"
           element={
             <Projects username={username} role={userRole} userId={userId} />
+          }
+        />
+        <Route
+          path="messages"
+          element={
+            <Messages username={username} role={userRole} userId={userId} />
           }
         />
         <Route path="vendors" element={<p>vendors</p>} />

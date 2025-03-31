@@ -6,7 +6,7 @@ import vendors from "../data/vendors.json" with { type: "json" };
 import projects from "../data/projects.json" with { type: "json" };
 import products from "../data/products.json" with { type: "json" };
 import orders from "../data/orders.json" with { type: "json" };
-import messages from "../data/messages.json" with { type: "json" };
+import conversations from "../data/conversations.json" with { type: "json" };
 import { CloudLightning } from "lucide-react";
 
 // Simulated delay to mimic real API calls
@@ -25,9 +25,6 @@ const api = {
         (role === "any" || u.role === role)
     );
 
-    // console.log(user);
-    // console.log(typeof user);
-
     if (!user) {
       throw new Error("Invalid email or password");
     }
@@ -39,30 +36,25 @@ const api = {
       case "client":
         userDetails = clients.clients.find((c) => c.id === user.id);
         break;
-      
+
       case "designer":
-        // console.log("Designers data:", designers); // Debugging
-        // console.log("Designers.designers:", designers.designers); // Debugging
-    
         userDetails = designers.designers.find((d) => d.id === user.id);
-    
         console.log(userDetails); // Debugging
-        break;  
-      
+        break;
+
       case "vendor":
         userDetails = vendors.vendors.find((v) => v.id === user.id);
         break;
-      
+
       case "admin":
         userDetails = admins.admins.find((a) => a.id === user.id);
         break;
-      
+
       default:
         console.log("Invalid role:", user.role);
         break;
     }
-    
-    
+
     return {
       success: true,
       username: user.name,
@@ -113,7 +105,7 @@ const api = {
         data = orders.payments;
         break;
       case "conversations":
-        data = messages.conversations;
+        data = conversations.conversations;
         break;
       case "credentials":
         data = credentials.users;
@@ -149,7 +141,8 @@ const api = {
         result.clients = Array.from(new Set(result.projects.map(p => p.client_id)))
   .map(clientId => clients.clients.find(c => c.id === clientId));
 
-        result.messages = messages.conversations.filter(c => c.participants.includes(userId));
+        result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
+        // console.log(result.messages);
         result.orders = orders.orders.filter(o => o.designer_id === userId);
         result.vendors = vendors.vendors.filter(v =>
           designers.designers.find(d => d.id === userId)?.vendor_connections.includes(v.id)
@@ -158,11 +151,11 @@ const api = {
 
       case "client":
         result.projects = projects.projects.filter(p => p.client_id === userId);
-        result.messages = messages.conversations.filter(c => c.participants.includes(userId));
+        result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
         break;
 
       case "vendor":
-        result.messages = messages.conversations.filter(c => c.participants.includes(userId));
+        result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
         result.products = products.products.filter(p => p.vendor_id === userId);
         break;
 
@@ -176,11 +169,10 @@ const api = {
       default:
         throw new Error(`Invalid role: ${userRole}`);
     }
- console.log(result);
+    console.log(result);
     return result;
 },
-  
-};
 
+};
 
 export default api;

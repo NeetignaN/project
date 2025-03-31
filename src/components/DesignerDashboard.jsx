@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDesignerData } from "../contexts/DesignerDataContext";
+import { Link } from "react-router-dom";
 import {
   FiUser,
   FiPlus,
@@ -13,9 +14,10 @@ import {
   FiPhone,
   FiMapPin,
   FiArrowRight,
+  FiCheck,
 } from "react-icons/fi";
 import SummaryCard from "./SummaryCard";
-import styles from "./DesignerDashBoard.module.css";
+import styles from "./DesignerDashboard.module.css";
 import api from "../services/api.js";
 
 function DesignerDashboard({ userDetails, userId, role }) {
