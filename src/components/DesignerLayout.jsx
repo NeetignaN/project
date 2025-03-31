@@ -152,12 +152,12 @@ function DesignerLayout({ onLogout, username = "User" }) {
                 Messages
               </MenuItem>
               <MenuItem
-                active={isActive("/designer/calendar")}
+                active={isActive("/designer/schedules")}
                 onClick={() => setCollapsed(true)}
-                component={<Link to="/designer/calendar" />}
+                component={<Link to="/designer/schedules" />}
                 icon={<FiCalendar />}
               >
-                Calendar
+                Schedules
               </MenuItem>
               <MenuItem
                 active={isActive("/designer/settings")}

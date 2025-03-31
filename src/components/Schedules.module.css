@@ -1,0 +1,266 @@
+.container {
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.addButton {
+    background-color: #3a86ff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.addButton:hover {
+    background-color: #2a75ee;
+}
+
+.calendarView {
+    margin-bottom: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.navigationHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+}
+
+.navigationControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navButton {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navButton:hover {
+    background-color: #eee;
+}
+
+.currentDate {
+    font-weight: 600;
+    font-size: 18px;
+    color: #333;
+}
+
+.viewControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.viewButton {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #555;
+}
+
+.viewButton.active {
+    background-color: #3a86ff;
+    color: white;
+    border-color: #3a86ff;
+}
+
+.calendar {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.calendar th {
+    padding: 12px;
+    text-align: center;
+    font-weight: 500;
+    color: #555;
+    border-bottom: 1px solid #eee;
+}
+
+.calendar td {
+    border: 1px solid #eee;
+    height: 100px;
+    vertical-align: top;
+    padding: 8px;
+}
+
+.dayNumber {
+    font-weight: 500;
+    margin-bottom: 4px;
+    text-align: right;
+    color: #333;
+}
+
+.today {
+    background-color: #f0f7ff;
+}
+
+.outsideMonth {
+    background-color: #f9f9f9;
+    color: #bbb;
+}
+
+.eventsList {
+    margin-top: 24px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.eventsHeader {
+    padding: 16px 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+}
+
+.eventItem {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+}
+
+.eventItem:hover {
+    background-color: #f9f9f9;
+}
+
+.eventColor {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.confirmed {
+    background-color: #4caf50;
+}
+
+.tentative {
+    background-color: #ff9800;
+}
+
+.pending {
+    background-color: #f44336;
+}
+
+.eventDetails {
+    flex: 1;
+}
+
+.eventTitle {
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.eventInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #666;
+    font-size: 14px;
+}
+
+.eventInfoItem {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.eventActions {
+    display: flex;
+    gap: 8px;
+}
+
+.actionButton {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actionButton:hover {
+    background-color: #eee;
+}
+
+.calendarEvent {
+    padding: 4px 6px;
+    margin-bottom: 4px;
+    border-radius: 2px;
+    font-size: 12px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.calendarEvent:hover {
+    transform: translateY(-1px);
+}
+
+.eventConfirmed {
+    background-color: #4caf50;
+}
+
+.eventTentative {
+    background-color: #ff9800;
+}
+
+.eventPending {
+    background-color: #f44336;
+}

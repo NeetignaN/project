@@ -15,6 +15,7 @@ import Dashboard from "./components/Dashboard.jsx";
 import Clients from "./components/Clients.jsx"; // Import new Clients component
 import Projects from "./components/Projects.jsx"; // Import new Projects component
 import Messages from "./components/Messages.jsx"; // Import new Messages component
+import Schedules from "./components/Schedules.jsx"; // Import new Schedules component
 import authService from "./services/authService.js";
 
 // Main App Component
@@ -130,6 +131,12 @@ function AppContent() {
           path="messages"
           element={
             <Messages username={username} role={userRole} userId={userId} />
+          }
+        />
+        <Route
+          path="schedules"
+          element={
+            <Schedules username={username} role={userRole} userId={userId} />
           }
         />
         <Route path="vendors" element={<p>vendors</p>} />

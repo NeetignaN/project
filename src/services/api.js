@@ -7,7 +7,7 @@ import projects from "../data/projects.json" with { type: "json" };
 import products from "../data/products.json" with { type: "json" };
 import orders from "../data/orders.json" with { type: "json" };
 import conversations from "../data/conversations.json" with { type: "json" };
-import { CloudLightning } from "lucide-react";
+import schedules from "../data/schedules.json" with { type: "json" };
 
 // Simulated delay to mimic real API calls
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -110,6 +110,11 @@ const api = {
       case "credentials":
         data = credentials.users;
         break;
+      case "schedules":
+        data = id
+          ? schedules.schedules.find((s) => s.id === id)
+          : schedules.schedules;
+        break;
       default:
         throw new Error(`Unknown resource type: ${resourceType}`);
     }
@@ -132,14 +137,15 @@ const api = {
       orders: [],
       vendors: [],
       designers: [],
-      credentials: []
+      credentials: [],
+      schedules: []
     };
 
     switch (userRole) {
       case "designer":
         result.projects = projects.projects.filter(p => p.designer_id === userId);
         result.clients = Array.from(new Set(result.projects.map(p => p.client_id)))
-  .map(clientId => clients.clients.find(c => c.id === clientId));
+          .map(clientId => clients.clients.find(c => c.id === clientId));
 
         result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
         // console.log(result.messages);
@@ -147,16 +153,19 @@ const api = {
         result.vendors = vendors.vendors.filter(v =>
           designers.designers.find(d => d.id === userId)?.vendor_connections.includes(v.id)
         );
+        result.schedules = schedules.schedules.filter(s => s.designer_id === userId);
         break;
 
       case "client":
         result.projects = projects.projects.filter(p => p.client_id === userId);
         result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
+        result.schedules = schedules.schedules.filter(s => s.client_id === userId);
         break;
 
       case "vendor":
         result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
         result.products = products.products.filter(p => p.vendor_id === userId);
+        result.schedules = schedules.schedules.filter(s => s.vendor_id === userId);
         break;
 
       case "admin":
@@ -164,6 +173,7 @@ const api = {
         result.designers = designers.designers;
         result.clients = clients.clients;
         result.vendors = vendors.vendors;
+        result.schedules = schedules.schedules;
         break;
 
       default:
@@ -171,7 +181,7 @@ const api = {
     }
     console.log(result);
     return result;
-},
+  },
 
 };
 
