@@ -9,6 +9,11 @@ import {
   FiEdit,
   FiTrash2,
   FiEye,
+  FiX,
+  FiCheck,
+  FiCalendar,
+  FiUsers,
+  FiFolder,
 } from "react-icons/fi";
 import api from "../services/api";
 
@@ -20,6 +25,8 @@ function Schedules({ username, role, userId }) {
   const [view, setView] = useState("month"); // 'month', 'week', or 'day'
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [modalMode, setModalMode] = useState(null); // 'view', 'edit', or 'delete'
 
   // Fetch schedules and related data on component mount
   useEffect(() => {
@@ -44,6 +51,40 @@ function Schedules({ username, role, userId }) {
   // Helper function to format date (e.g., "March 2025")
   const formatMonthAndYear = (date) => {
     return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  };
+
+  // Helper function for week view (e.g., "Mar 31 - Apr 6, 2025")
+  const formatWeekRange = (date) => {
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week (Saturday)
+
+    const startMonth = startOfWeek.toLocaleDateString("en-US", {
+      month: "short",
+    });
+    const endMonth = endOfWeek.toLocaleDateString("en-US", { month: "short" });
+    const startDay = startOfWeek.getDate();
+    const endDay = endOfWeek.getDate();
+    const year = endOfWeek.getFullYear();
+
+    // If start and end are in the same month
+    if (startMonth === endMonth) {
+      return `${startMonth} ${startDay} - ${endDay}, ${year}`;
+    }
+
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+  };
+
+  // Helper function for day view (e.g., "Monday, March 31, 2025")
+  const formatDayFull = (date) => {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   // Helper function to format time (e.g., "9:00 AM")
@@ -140,18 +181,61 @@ function Schedules({ username, role, userId }) {
     return [...previousMonthDays, ...currentMonthDays, ...nextMonthDays];
   };
 
-  // Navigate to previous month
-  const goToPreviousMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    );
+  // Get the days for the current week
+  const getDaysInWeek = () => {
+    const days = [];
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay()); // Start with Sunday
+
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      days.push({
+        date: day,
+        outsideMonth: day.getMonth() !== currentDate.getMonth(),
+      });
+    }
+
+    return days;
   };
 
-  // Navigate to next month
-  const goToNextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    );
+  // Get hours for day view
+  const getHoursInDay = () => {
+    const hours = [];
+    for (let i = 8; i < 21; i++) {
+      // 8 AM to 8 PM
+      hours.push({
+        hour: i,
+        label: i > 12 ? `${i - 12} PM` : i === 12 ? "12 PM" : `${i} AM`,
+      });
+    }
+    return hours;
+  };
+
+  // Navigate to previous period based on current view
+  const goToPrevious = () => {
+    const newDate = new Date(currentDate);
+    if (view === "month") {
+      newDate.setMonth(currentDate.getMonth() - 1);
+    } else if (view === "week") {
+      newDate.setDate(currentDate.getDate() - 7);
+    } else if (view === "day") {
+      newDate.setDate(currentDate.getDate() - 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  // Navigate to next period based on current view
+  const goToNext = () => {
+    const newDate = new Date(currentDate);
+    if (view === "month") {
+      newDate.setMonth(currentDate.getMonth() + 1);
+    } else if (view === "week") {
+      newDate.setDate(currentDate.getDate() + 7);
+    } else if (view === "day") {
+      newDate.setDate(currentDate.getDate() + 1);
+    }
+    setCurrentDate(newDate);
   };
 
   // Go to today
@@ -181,7 +265,56 @@ function Schedules({ username, role, userId }) {
     });
   };
 
-  // Render calendar days
+  // Get events for a specific hour on a specific day
+  const getEventsForHour = (date, hour) => {
+    const startHour = new Date(date);
+    startHour.setHours(hour, 0, 0, 0);
+
+    const endHour = new Date(date);
+    endHour.setHours(hour + 1, 0, 0, 0);
+
+    return schedules.filter((event) => {
+      const eventStart = new Date(event.start_time);
+      const eventEnd = new Date(event.end_time);
+
+      return (
+        eventStart.getDate() === date.getDate() &&
+        eventStart.getMonth() === date.getMonth() &&
+        eventStart.getFullYear() === date.getFullYear() &&
+        ((eventStart >= startHour && eventStart < endHour) ||
+          (eventEnd > startHour && eventEnd <= endHour) ||
+          (eventStart <= startHour && eventEnd >= endHour))
+      );
+    });
+  };
+
+  // Handle event actions
+  const handleEventAction = (scheduleEvent, action, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setSelectedEvent(scheduleEvent);
+    setModalMode(action);
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setSelectedEvent(null);
+    setModalMode(null);
+  };
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = () => {
+    // In a real app, you'd call an API endpoint to delete the event
+    // For now, we'll just update the local state
+    const updatedSchedules = schedules.filter(
+      (schedule) => schedule.id !== selectedEvent.id
+    );
+    setSchedules(updatedSchedules);
+    closeModal();
+  };
+
+  // Render calendar days for month view
   const renderCalendarDays = () => {
     const days = getDaysInMonthGrid();
     const rows = [];
@@ -215,6 +348,7 @@ function Schedules({ username, role, userId }) {
                       ]
                     }`}
                     title={event.title}
+                    onClick={(e) => handleEventAction(event, "view", e)}
                   >
                     {formatTime(event.start_time)} {event.title}
                   </div>
@@ -232,6 +366,271 @@ function Schedules({ username, role, userId }) {
     }
 
     return rows;
+  };
+
+  // Render week view
+  const renderWeekView = () => {
+    const days = getDaysInWeek();
+    const hours = getHoursInDay();
+
+    return (
+      <div className={styles.weekView}>
+        <div className={styles.weekHeader}>
+          <div className={styles.weekHourLabel}></div>
+          {days.map((day, index) => (
+            <div
+              key={index}
+              className={`${styles.weekDay} ${
+                isToday(day.date) ? styles.today : ""
+              } ${day.outsideMonth ? styles.outsideMonth : ""}`}
+            >
+              <div className={styles.weekDayName}>
+                {day.date.toLocaleDateString("en-US", { weekday: "short" })}
+              </div>
+              <div className={styles.weekDayNumber}>{day.date.getDate()}</div>
+            </div>
+          ))}
+        </div>
+        <div className={styles.weekBody}>
+          {hours.map((hour, hourIndex) => (
+            <div key={hourIndex} className={styles.weekRow}>
+              <div className={styles.weekHourLabel}>{hour.label}</div>
+              {days.map((day, dayIndex) => {
+                const hourEvents = getEventsForHour(day.date, hour.hour);
+                return (
+                  <div
+                    key={dayIndex}
+                    className={`${styles.weekCell} ${
+                      isToday(day.date) ? styles.todayCell : ""
+                    }`}
+                  >
+                    {hourEvents.map((event, eventIndex) => (
+                      <div
+                        key={eventIndex}
+                        className={`${styles.weekEvent} ${
+                          styles[event.status]
+                        }`}
+                        onClick={(e) => handleEventAction(event, "view", e)}
+                      >
+                        <div className={styles.weekEventTime}>
+                          {formatTime(event.start_time)}
+                        </div>
+                        <div className={styles.weekEventTitle}>
+                          {event.title}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Render day view
+  const renderDayView = () => {
+    const hours = getHoursInDay();
+
+    return (
+      <div className={styles.dayView}>
+        <div className={styles.dayHeader}>
+          <div className={styles.dayTitle}>{formatDayFull(currentDate)}</div>
+        </div>
+        <div className={styles.dayBody}>
+          {hours.map((hour, hourIndex) => {
+            const hourEvents = getEventsForHour(currentDate, hour.hour);
+            return (
+              <div key={hourIndex} className={styles.dayRow}>
+                <div className={styles.dayHourLabel}>{hour.label}</div>
+                <div className={styles.dayHourContent}>
+                  {hourEvents.map((event, eventIndex) => (
+                    <div
+                      key={eventIndex}
+                      className={`${styles.dayEvent} ${styles[event.status]}`}
+                      onClick={(e) => handleEventAction(event, "view", e)}
+                    >
+                      <div className={styles.dayEventTime}>
+                        {formatTime(event.start_time)} -{" "}
+                        {formatTime(event.end_time)}
+                      </div>
+                      <div className={styles.dayEventTitle}>{event.title}</div>
+                      <div className={styles.dayEventLocation}>
+                        <FiMapPin size={12} /> {event.location}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Render event details modal
+  const renderEventModal = () => {
+    if (!selectedEvent || !modalMode) return null;
+
+    return (
+      <div className={styles.modalOverlay} onClick={closeModal}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h3>
+              {modalMode === "view" && "Schedule Details"}
+              {modalMode === "edit" && "Edit Schedule"}
+              {modalMode === "delete" && "Delete Schedule"}
+            </h3>
+            <button className={styles.closeButton} onClick={closeModal}>
+              <FiX />
+            </button>
+          </div>
+
+          <div className={styles.modalContent}>
+            {modalMode === "view" && (
+              <div className={styles.eventDetails}>
+                <div
+                  className={`${styles.eventStatusBadge} ${
+                    styles[selectedEvent.status]
+                  }`}
+                >
+                  {selectedEvent.status.charAt(0).toUpperCase() +
+                    selectedEvent.status.slice(1)}
+                </div>
+                <h4 className={styles.eventModalTitle}>
+                  {selectedEvent.title}
+                </h4>
+                <div className={styles.eventModalInfo}>
+                  <div className={styles.infoRow}>
+                    <div className={styles.infoIcon}>
+                      <FiCalendar />
+                    </div>
+                    <div>
+                      <p className={styles.infoLabel}>Date</p>
+                      <p className={styles.infoValue}>
+                        {formatDate(selectedEvent.start_time)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <div className={styles.infoIcon}>
+                      <FiClock />
+                    </div>
+                    <div>
+                      <p className={styles.infoLabel}>Time</p>
+                      <p className={styles.infoValue}>
+                        {formatTime(selectedEvent.start_time)} -{" "}
+                        {formatTime(selectedEvent.end_time)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <div className={styles.infoIcon}>
+                      <FiMapPin />
+                    </div>
+                    <div>
+                      <p className={styles.infoLabel}>Location</p>
+                      <p className={styles.infoValue}>
+                        {selectedEvent.location}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedEvent.client_id && (
+                    <div className={styles.infoRow}>
+                      <div className={styles.infoIcon}>
+                        <FiUsers />
+                      </div>
+                      <div>
+                        <p className={styles.infoLabel}>Client</p>
+                        <p className={styles.infoValue}>
+                          {getClientName(selectedEvent.client_id)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedEvent.project_id && (
+                    <div className={styles.infoRow}>
+                      <div className={styles.infoIcon}>
+                        <FiFolder />
+                      </div>
+                      <div>
+                        <p className={styles.infoLabel}>Project</p>
+                        <p className={styles.infoValue}>
+                          {getProjectName(selectedEvent.project_id)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {selectedEvent.description && (
+                  <div className={styles.descriptionSection}>
+                    <h5 className={styles.descriptionTitle}>Description</h5>
+                    <p className={styles.descriptionText}>
+                      {selectedEvent.description}
+                    </p>
+                  </div>
+                )}
+
+                <div className={styles.modalActions}>
+                  <button
+                    className={styles.actionButton}
+                    onClick={() => setModalMode("edit")}
+                  >
+                    <FiEdit /> Edit
+                  </button>
+                  <button
+                    className={`${styles.actionButton} ${styles.deleteButton}`}
+                    onClick={() => setModalMode("delete")}
+                  >
+                    <FiTrash2 /> Delete
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {modalMode === "delete" && (
+              <div className={styles.deleteConfirmation}>
+                <p>Are you sure you want to delete this schedule?</p>
+                <p className={styles.eventTitle}>{selectedEvent.title}</p>
+                <p>
+                  {formatDate(selectedEvent.start_time)} at{" "}
+                  {formatTime(selectedEvent.start_time)}
+                </p>
+                <div className={styles.modalActions}>
+                  <button className={styles.cancelButton} onClick={closeModal}>
+                    Cancel
+                  </button>
+                  <button
+                    className={styles.confirmDeleteButton}
+                    onClick={handleDeleteConfirm}
+                  >
+                    <FiTrash2 /> Delete
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {modalMode === "edit" && (
+              <div className={styles.editForm}>
+                <p>Edit form would be implemented here in a real application</p>
+                <div className={styles.modalActions}>
+                  <button className={styles.cancelButton} onClick={closeModal}>
+                    Cancel
+                  </button>
+                  <button className={styles.saveButton} onClick={closeModal}>
+                    <FiCheck /> Save
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -256,17 +655,19 @@ function Schedules({ username, role, userId }) {
       <div className={styles.calendarView}>
         <div className={styles.navigationHeader}>
           <div className={styles.navigationControls}>
-            <button className={styles.navButton} onClick={goToPreviousMonth}>
+            <button className={styles.navButton} onClick={goToPrevious}>
               <FiChevronLeft />
             </button>
             <button className={styles.navButton} onClick={goToToday}>
               Today
             </button>
-            <button className={styles.navButton} onClick={goToNextMonth}>
+            <button className={styles.navButton} onClick={goToNext}>
               <FiChevronRight />
             </button>
             <div className={styles.currentDate}>
-              {formatMonthAndYear(currentDate)}
+              {view === "month" && formatMonthAndYear(currentDate)}
+              {view === "week" && formatWeekRange(currentDate)}
+              {view === "day" && formatDayFull(currentDate)}
             </div>
           </div>
           <div className={styles.viewControls}>
@@ -297,20 +698,26 @@ function Schedules({ username, role, userId }) {
           </div>
         </div>
 
-        <table className={styles.calendar}>
-          <thead>
-            <tr>
-              <th>Sunday</th>
-              <th>Monday</th>
-              <th>Tuesday</th>
-              <th>Wednesday</th>
-              <th>Thursday</th>
-              <th>Friday</th>
-              <th>Saturday</th>
-            </tr>
-          </thead>
-          <tbody>{renderCalendarDays()}</tbody>
-        </table>
+        {view === "month" && (
+          <table className={styles.calendar}>
+            <thead>
+              <tr>
+                <th>Sunday</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+              </tr>
+            </thead>
+            <tbody>{renderCalendarDays()}</tbody>
+          </table>
+        )}
+
+        {view === "week" && renderWeekView()}
+
+        {view === "day" && renderDayView()}
       </div>
 
       <div className={styles.eventsList}>
@@ -341,13 +748,25 @@ function Schedules({ username, role, userId }) {
                   </div>
                 </div>
                 <div className={styles.eventActions}>
-                  <button className={styles.actionButton} title="View">
+                  <button
+                    className={styles.actionButton}
+                    title="View"
+                    onClick={(e) => handleEventAction(event, "view", e)}
+                  >
                     <FiEye />
                   </button>
-                  <button className={styles.actionButton} title="Edit">
+                  <button
+                    className={styles.actionButton}
+                    title="Edit"
+                    onClick={(e) => handleEventAction(event, "edit", e)}
+                  >
                     <FiEdit />
                   </button>
-                  <button className={styles.actionButton} title="Delete">
+                  <button
+                    className={styles.actionButton}
+                    title="Delete"
+                    onClick={(e) => handleEventAction(event, "delete", e)}
+                  >
                     <FiTrash2 />
                   </button>
                 </div>
@@ -355,6 +774,8 @@ function Schedules({ username, role, userId }) {
             ))
         )}
       </div>
+
+      {renderEventModal()}
     </div>
   );
 }

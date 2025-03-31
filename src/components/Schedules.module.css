@@ -264,3 +264,453 @@
 .eventPending {
     background-color: #f44336;
 }
+
+/* Week View Styles */
+.weekView {
+    width: 100%;
+    overflow: auto;
+}
+
+.weekHeader {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+}
+
+.weekDay {
+    padding: 10px;
+    text-align: center;
+    border-left: 1px solid #eee;
+}
+
+.weekDay.today {
+    background-color: #f0f7ff;
+}
+
+.weekDay.outsideMonth {
+    color: #bbb;
+}
+
+.weekDayName {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.weekDayNumber {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.weekBody {
+    min-height: 600px;
+}
+
+.weekRow {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    border-bottom: 1px solid #eee;
+    min-height: 60px;
+}
+
+.weekHourLabel {
+    padding: 10px;
+    background-color: #f9f9f9;
+    font-size: 14px;
+    color: #555;
+    text-align: right;
+    font-weight: 500;
+    border-right: 1px solid #eee;
+}
+
+.weekCell {
+    border-left: 1px solid #eee;
+    padding: 5px;
+    position: relative;
+}
+
+.todayCell {
+    background-color: #f0f7ff;
+}
+
+.weekEvent {
+    background-color: #3a86ff;
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: white;
+    margin-bottom: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.weekEvent:hover {
+    transform: translateY(-1px);
+}
+
+.weekEvent.confirmed {
+    background-color: #4caf50;
+}
+
+.weekEvent.tentative {
+    background-color: #ff9800;
+}
+
+.weekEvent.pending {
+    background-color: #f44336;
+}
+
+.weekEventTime {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.weekEventTitle {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Day View Styles */
+.dayView {
+    width: 100%;
+    overflow: auto;
+}
+
+.dayHeader {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+}
+
+.dayTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+.dayBody {
+    min-height: 600px;
+}
+
+.dayRow {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    border-bottom: 1px solid #eee;
+    min-height: 60px;
+}
+
+.dayHourLabel {
+    padding: 10px;
+    background-color: #f9f9f9;
+    font-size: 14px;
+    color: #555;
+    text-align: right;
+    font-weight: 500;
+    border-right: 1px solid #eee;
+}
+
+.dayHourContent {
+    padding: 5px;
+}
+
+.dayEvent {
+    background-color: #3a86ff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: white;
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.dayEvent:hover {
+    transform: translateY(-1px);
+}
+
+.dayEvent.confirmed {
+    background-color: #4caf50;
+}
+
+.dayEvent.tentative {
+    background-color: #ff9800;
+}
+
+.dayEvent.pending {
+    background-color: #f44336;
+}
+
+.dayEventTime {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.dayEventTitle {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.dayEventLocation {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.9;
+}
+
+/* Modal Styles */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 500px;
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+}
+
+.modalHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modalContent {
+    padding: 20px;
+}
+
+.eventStatus {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: white;
+    background-color: #888;
+    text-transform: capitalize;
+}
+
+.eventStatus.confirmed {
+    background-color: #4caf50;
+}
+
+.eventStatus.tentative {
+    background-color: #ff9800;
+}
+
+.eventStatus.pending {
+    background-color: #f44336;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    gap: 12px;
+}
+
+.deleteButton {
+    color: #f44336;
+}
+
+.cancelButton {
+    background-color: #f1f1f1;
+    color: #555;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.cancelButton:hover {
+    background-color: #e1e1e1;
+}
+
+.confirmDeleteButton {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.confirmDeleteButton:hover {
+    background-color: #d32f2f;
+}
+
+.saveButton {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.saveButton:hover {
+    background-color: #388e3c;
+}
+
+.deleteConfirmation {
+    text-align: center;
+}
+
+.deleteConfirmation p {
+    margin: 8px 0;
+}
+
+.deleteConfirmation .eventTitle {
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    margin-top: 12px;
+}
+
+.editForm {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.moreEvents {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+/* Enhanced Modal Styles */
+.eventStatusBadge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 12px;
+    text-transform: capitalize;
+}
+
+.eventStatusBadge.confirmed {
+    background-color: #4caf50;
+}
+
+.eventStatusBadge.tentative {
+    background-color: #ff9800;
+}
+
+.eventStatusBadge.pending {
+    background-color: #f44336;
+}
+
+.eventModalTitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 24px;
+    color: #333;
+    line-height: 1.3;
+}
+
+.eventModalInfo {
+    margin-bottom: 20px;
+}
+
+.infoRow {
+    display: flex;
+    margin-bottom: 16px;
+    align-items: flex-start;
+}
+
+.infoIcon {
+    width: 32px;
+    height: 32px;
+    background-color: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    color: #3a86ff;
+    flex-shrink: 0;
+}
+
+.infoLabel {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 4px 0;
+}
+
+.infoValue {
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+    font-weight: 500;
+}
+
+.descriptionSection {
+    background-color: #f9f9f9;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.descriptionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.descriptionText {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+    margin: 0;
+}
