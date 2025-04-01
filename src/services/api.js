@@ -105,7 +105,8 @@ const api = {
         data = orders.payments;
         break;
       case "conversations":
-        data = conversations.conversations;
+        data =  id
+        ? conversations.conversations.find((c) => c.id === id) : conversations.conversations;
         break;
       case "credentials":
         data = credentials.users;
@@ -131,14 +132,14 @@ const api = {
     await delay(300); // Simulate network delay
 
     const result = {
+      credentials: [],
       projects: [],
       clients: [],
-      messages: [],
-      orders: [],
       vendors: [],
+      conversations: [],
+      schedules: [],
       designers: [],
-      credentials: [],
-      schedules: []
+      orders: [],
     };
 
     switch (userRole) {
@@ -146,24 +147,21 @@ const api = {
         result.projects = projects.projects.filter(p => p.designer_id === userId);
         result.clients = Array.from(new Set(result.projects.map(p => p.client_id)))
           .map(clientId => clients.clients.find(c => c.id === clientId));
-
-        result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
-        // console.log(result.messages);
-        result.orders = orders.orders.filter(o => o.designer_id === userId);
-        result.vendors = vendors.vendors.filter(v =>
-          designers.designers.find(d => d.id === userId)?.vendor_connections.includes(v.id)
-        );
+        result.vendors = vendors.vendors.filter(v => designers.designers.find(d => d.id   === userId)?.vendor_connections.includes(v.id));
+        result.conversations = conversations.conversations.filter(c => c.participants.includes(userId));
+        result.orders = orders.orders.filter(o => o.designer_id === userId); 
         result.schedules = schedules.schedules.filter(s => s.designer_id === userId);
+        console.log(result);
         break;
 
       case "client":
         result.projects = projects.projects.filter(p => p.client_id === userId);
-        result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
+        result.conversations = conversations.conversations.filter(c => c.participants.includes(userId));
         result.schedules = schedules.schedules.filter(s => s.client_id === userId);
         break;
 
       case "vendor":
-        result.messages = conversations.conversations.filter(c => c.participants.includes(userId));
+        result.conversations = conversations.conversations.filter(c => c.participants.includes(userId));
         result.products = products.products.filter(p => p.vendor_id === userId);
         result.schedules = schedules.schedules.filter(s => s.vendor_id === userId);
         break;

@@ -1,61 +1,51 @@
 import React, { useState, useEffect } from "react";
+
+import { useDesignerData } from "../contexts/DesignerDataContext";
 import {
   FiFilter,
   FiSearch,
   FiClock,
   FiPaperclip,
   FiMessageSquare,
+  FiSend,
 } from "react-icons/fi";
 import api from "../services/api.js";
 import styles from "./Messages.module.css";
 
 function Messages({ username, role, userId }) {
-  const [conversations, setConversations] = useState([]);
-  const [filteredConversations, setFilteredConversations] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [designers, setDesigners] = useState([]);
+  const { conversations, setConversations, projects, clients } =
+    useDesignerData();
+  const [filteredConversations, setFilteredConversations] = useState(null);
   const [activeConversation, setActiveConversation] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all"); // all, projects, clients
   const [filterValue, setFilterValue] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [newMessage, setNewMessage] = useState("");
 
-  // Fetch data on component mount
   useEffect(() => {
-    async function fetchData() {
+    const fetchDesignerConvos = async () => {
       try {
         setIsLoading(true);
 
-        // Fetch conversations
-        const userData = await api.getUserData(userId, role);
-        const allConversations = userData.messages;
+        if (userId && conversations.length === 0) {
+          // Fetch data from the API only if context data is empty
+          const data = await api.getUserData(userId, role);
 
-        // Fetch related data
-        const allProjects = await api.getData("projects");
-        const allClients = await api.getData("clients");
-        const allDesigners = await api.getData("designers");
+          // Save data to context
+          setConversations(data.conversations);
 
-        setConversations(allConversations);
-        setFilteredConversations(allConversations);
-        setProjects(allProjects);
-        setClients(allClients);
-        setDesigners(allDesigners);
-
-        // Set the first conversation as active if available
-        if (allConversations.length > 0) {
-          setActiveConversation(allConversations[0]);
+          console.log("Fetched Conversations from API:", data.conversations);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching data from API:", error);
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Ensure loading is set to false after fetching
       }
-    }
+    };
 
-    fetchData();
-  }, [userId, role]);
-  //   console.log(conversations);
+    fetchDesignerConvos();
+  }, [userId, role, conversations, setConversations]);
 
   // Apply filters when filter type or value changes
   useEffect(() => {
@@ -71,16 +61,16 @@ function Messages({ username, role, userId }) {
       filtered = filtered.filter((conv) => {
         const participantMatches = conv.participants.some((participantId) => {
           const client = clients.find((c) => c.id === participantId);
-          const designer = designers.find((d) => d.id === participantId);
+          //   const designer = designers.find((d) => d.id === participantId);
 
           if (client) {
             return client.name.toLowerCase().includes(searchTerm.toLowerCase());
           }
-          if (designer) {
-            return designer.name
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase());
-          }
+          //   if (designer) {
+          //     return designer.name
+          //       .toLowerCase()
+          //       .includes(searchTerm.toLowerCase());
+          //   }
           return false;
         });
 
@@ -104,6 +94,37 @@ function Messages({ username, role, userId }) {
     setFilteredConversations(filtered);
   };
 
+  // Handle sending a new message
+  const handleSendMessage = () => {
+    if (!activeConversation || !newMessage.trim()) return;
+
+    // Create new message object
+    const newMessageObj = {
+      id: `msg_${Date.now()}`, // Generate a unique ID
+      sender: userId,
+      timestamp: new Date().toISOString(),
+      content: newMessage.trim(),
+      attachments: [],
+      read_by: [userId],
+    };
+
+    // Update the active conversation with the new message
+    const updatedConversation = {
+      ...activeConversation,
+      messages: [...activeConversation.messages, newMessageObj],
+    };
+
+    // Update the conversations state by replacing the active conversation
+    const updatedConversations = conversations.map((conv) =>
+      conv.id === activeConversation.id ? updatedConversation : conv
+    );
+
+    // Update state
+    setActiveConversation(updatedConversation);
+    setConversations(updatedConversations);
+    setNewMessage(""); // Clear input
+  };
+
   // Get the participant name
   const getParticipantName = (participantId) => {
     if (participantId === userId) return "You";
@@ -111,8 +132,8 @@ function Messages({ username, role, userId }) {
     const client = clients.find((c) => c.id === participantId);
     if (client) return client.name;
 
-    const designer = designers.find((d) => d.id === participantId);
-    if (designer) return designer.name;
+    // const designer = designers.find((d) => d.id === participantId);
+    // if (designer) return designer.name;
 
     return "Unknown User";
   };
@@ -160,6 +181,14 @@ function Messages({ username, role, userId }) {
   // Handle filter value change
   const handleFilterValueChange = (e) => {
     setFilterValue(e.target.value);
+  };
+
+  // Handle key press in message input (send on Enter)
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   if (isLoading) {
@@ -350,12 +379,22 @@ function Messages({ username, role, userId }) {
                 <textarea
                   placeholder="Type a message..."
                   className={styles.messageInput}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
                 />
                 <div className={styles.messageActions}>
                   <button className={styles.attachButton}>
                     <FiPaperclip />
                   </button>
-                  <button className={styles.sendButton}>Send</button>
+                  <button
+                    className={styles.sendButton}
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim()}
+                  >
+                    <FiSend />
+                    <span>Send</span>
+                  </button>
                 </div>
               </div>
             </>

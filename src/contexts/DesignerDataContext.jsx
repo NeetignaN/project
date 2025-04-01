@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 const DesignerDataContext = createContext();
 
 // Custom hook to use the DesignerDataContext
-export const useDesignerData = () => {
+export function useDesignerData() {
   const context = useContext(DesignerDataContext);
   if (!context) {
     throw new Error(
@@ -12,12 +12,14 @@ export const useDesignerData = () => {
     );
   }
   return context;
-};
+}
 
 // Provider component
 export const DesignerDataProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [conversations, setConversations] = useState([]);
 
   // Safely parse data from localStorage
   const safeParse = (key) => {
@@ -34,6 +36,8 @@ export const DesignerDataProvider = ({ children }) => {
   useEffect(() => {
     const storedProjects = safeParse("projects");
     const storedClients = safeParse("clients");
+    const storedSchedules = safeParse("schedules");
+    const storedConversations = safeParse("conversations");
 
     if (storedProjects.length > 0) {
       setProjects(storedProjects);
@@ -43,6 +47,18 @@ export const DesignerDataProvider = ({ children }) => {
     if (storedClients.length > 0) {
       setClients(storedClients);
       console.log("Initialized Clients from localStorage:", storedClients);
+    }
+    if (storedSchedules.length > 0) {
+      setSchedules(storedSchedules);
+      console.log("Initialized Schedules from localStorage:", storedSchedules);
+    }
+
+    if (storedConversations.length > 0) {
+      setConversations(storedConversations);
+      console.log(
+        "Initialized Conversations from localStorage:",
+        storedConversations
+      );
     }
   }, []);
 
@@ -57,9 +73,28 @@ export const DesignerDataProvider = ({ children }) => {
     console.log("Updated Clients in localStorage:", clients);
   }, [clients]);
 
+  useEffect(() => {
+    localStorage.setItem("schedules", JSON.stringify(schedules));
+    console.log("Updated Schedules in localStorage:", schedules);
+  }, [schedules]);
+
+  useEffect(() => {
+    localStorage.setItem("conversations", JSON.stringify(conversations));
+    console.log("Updated Conversations in localStorage:", conversations);
+  }, [conversations]);
+
   return (
     <DesignerDataContext.Provider
-      value={{ projects, setProjects, clients, setClients }}
+      value={{
+        projects,
+        setProjects,
+        clients,
+        setClients,
+        schedules,
+        setSchedules,
+        conversations,
+        setConversations,
+      }}
     >
       {children}
     </DesignerDataContext.Provider>
