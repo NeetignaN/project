@@ -20,6 +20,8 @@ export const DesignerDataProvider = ({ children }) => {
   const [clients, setClients] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [conversations, setConversations] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [products, setProducts] = useState([]);
 
   // Safely parse data from localStorage
   const safeParse = (key) => {
@@ -38,6 +40,8 @@ export const DesignerDataProvider = ({ children }) => {
     const storedClients = safeParse("clients");
     const storedSchedules = safeParse("schedules");
     const storedConversations = safeParse("conversations");
+    const storedVendors = safeParse("vendors");
+    const storedProducts = safeParse("products");
 
     if (storedProjects.length > 0) {
       setProjects(storedProjects);
@@ -59,6 +63,16 @@ export const DesignerDataProvider = ({ children }) => {
         "Initialized Conversations from localStorage:",
         storedConversations
       );
+    }
+
+    if (storedVendors.length > 0) {
+      setVendors(storedVendors);
+      console.log("Initialized Vendors from localStorage:", storedVendors);
+    }
+
+    if (storedProducts.length > 0) {
+      setProducts(storedProducts);
+      console.log("Initialized Products from localStorage:", storedProducts);
     }
   }, []);
 
@@ -83,6 +97,16 @@ export const DesignerDataProvider = ({ children }) => {
     console.log("Updated Conversations in localStorage:", conversations);
   }, [conversations]);
 
+  useEffect(() => {
+    localStorage.setItem("vendors", JSON.stringify(vendors));
+    console.log("Updated Vendors in localStorage:", vendors);
+  }, [vendors]);
+
+  useEffect(() => {
+    localStorage.setItem("products", JSON.stringify(products));
+    console.log("Updated Products in localStorage:", products);
+  }, [products]);
+
   return (
     <DesignerDataContext.Provider
       value={{
@@ -94,6 +118,10 @@ export const DesignerDataProvider = ({ children }) => {
         setSchedules,
         conversations,
         setConversations,
+        vendors,
+        setVendors,
+        products,
+        setProducts,
       }}
     >
       {children}

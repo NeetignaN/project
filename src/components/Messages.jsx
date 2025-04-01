@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import { useDesignerData } from "../contexts/DesignerDataContext";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiFilter,
   FiSearch,
@@ -22,6 +23,43 @@ function Messages({ username, role, userId }) {
   const [filterValue, setFilterValue] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Check if we have vendor data from navigation
+  useEffect(() => {
+    if (location.state?.vendorId) {
+      const vendorId = location.state.vendorId;
+      const vendorName = location.state.vendorName;
+
+      // Clear the navigation state to prevent re-opening on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+
+      // After conversations are loaded, find and set the vendor conversation
+      const findVendorConversation = () => {
+        if (!isLoading && conversations.length > 0) {
+          // Find conversation with this vendor
+          const vendorConvo = conversations.find(
+            (conv) =>
+              conv.participants.includes(vendorId) &&
+              conv.participants.includes(userId)
+          );
+
+          if (vendorConvo) {
+            setActiveConversation(vendorConvo);
+            // Set filter to show all conversations
+            setFilterType("all");
+            setFilterValue("all");
+          } else {
+            console.log("No conversation found with vendor:", vendorId);
+            // Here you could potentially create a new conversation with the vendor
+          }
+        }
+      };
+
+      findVendorConversation();
+    }
+  }, [location, navigate, conversations, userId, isLoading]);
 
   useEffect(() => {
     const fetchDesignerConvos = async () => {
@@ -61,16 +99,10 @@ function Messages({ username, role, userId }) {
       filtered = filtered.filter((conv) => {
         const participantMatches = conv.participants.some((participantId) => {
           const client = clients.find((c) => c.id === participantId);
-          //   const designer = designers.find((d) => d.id === participantId);
 
           if (client) {
             return client.name.toLowerCase().includes(searchTerm.toLowerCase());
           }
-          //   if (designer) {
-          //     return designer.name
-          //       .toLowerCase()
-          //       .includes(searchTerm.toLowerCase());
-          //   }
           return false;
         });
 
@@ -131,9 +163,6 @@ function Messages({ username, role, userId }) {
 
     const client = clients.find((c) => c.id === participantId);
     if (client) return client.name;
-
-    // const designer = designers.find((d) => d.id === participantId);
-    // if (designer) return designer.name;
 
     return "Unknown User";
   };
