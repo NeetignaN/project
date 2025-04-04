@@ -117,12 +117,17 @@ const api = {
         }
 
         case "client": {
-          const [projectsData, conversationsData, schedulesData] =
-            await Promise.all([
-              fetchAll("projects"),
-              fetchAll("conversations"),
-              fetchAll("schedules"),
-            ]);
+          const [
+            projectsData,
+            conversationsData,
+            schedulesData,
+            designersData,
+          ] = await Promise.all([
+            fetchAll("projects"),
+            fetchAll("conversations"),
+            fetchAll("schedules"),
+            fetchAll("designers"),
+          ]);
 
           result.projects = projectsData.filter((p) => p.client_id === userId);
           result.conversations = conversationsData.filter((c) =>
@@ -130,6 +135,12 @@ const api = {
           );
           result.schedules = schedulesData.filter(
             (s) => s.client_id === userId
+          );
+          const uniqueDesignerIds = [
+            ...new Set(result.projects.map((p) => p.designer_id)),
+          ];
+          result.designers = uniqueDesignerIds.map((did) =>
+            designersData.find((c) => c.id === did)
           );
           break;
         }
@@ -149,6 +160,7 @@ const api = {
           result.schedules = schedulesData.filter(
             (s) => s.vendor_id === userId
           );
+          console.log(result);
           break;
         }
 

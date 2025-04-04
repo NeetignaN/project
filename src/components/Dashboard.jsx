@@ -3,6 +3,7 @@ import styles from "./Dashboard.module.css";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import DesignerDashboard from "./DesignerDashboard.jsx";
+import ClientDashboard from "./ClientDashboard.jsx";
 
 function Dashboard({ username, role, userId, userDetails }) {
   const [loading, setLoading] = useState(true);
@@ -13,13 +14,20 @@ function Dashboard({ username, role, userId, userDetails }) {
         <div className={styles.headerTitle}>
           <h1>Dashboard</h1>
           <p>
-            Welcome back, {username}! Here's an overview of your projects and
-            clients.
+            Welcome back, {username}! Here's an overview of your{" "}
+            {role === "client" ? "projects" : "projects and clients"}.
           </p>
         </div>
       </header>
       {role === "designer" && (
         <DesignerDashboard
+          userDetails={userDetails}
+          userId={userId}
+          role={role}
+        />
+      )}
+      {role === "client" && (
+        <ClientDashboard
           userDetails={userDetails}
           userId={userId}
           role={role}

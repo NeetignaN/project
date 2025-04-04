@@ -1,4 +1,5 @@
 import { DesignerDataProvider } from "./contexts/DesignerDataContext.jsx";
+import { ClientDataProvider } from "./contexts/ClientDataContext.jsx";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -11,12 +12,18 @@ import {
 import Login from "./components/Login.jsx";
 import LandingPage from "./components/LandingPage.jsx";
 import DesignerLayout from "./components/DesignerLayout.jsx";
+import ClientLayout from "./components/ClientLayout.jsx";
 import Dashboard from "./components/Dashboard.jsx";
-import Clients from "./components/Clients.jsx"; // Import new Clients component
-import Projects from "./components/Projects.jsx"; // Import new Projects component
-import Messages from "./components/Messages.jsx"; // Import new Messages component
-import Schedules from "./components/Schedules.jsx"; // Import new Schedules component
-import Vendors from "./components/Vendors.jsx"; // Import new Vendors component
+import ClientDashboard from "./components/ClientDashboard.jsx";
+import ClientSettings from "./components/ClientSettings.jsx";
+import Clients from "./components/Clients.jsx";
+import Projects from "./components/Projects.jsx";
+import ClientProjects from "./components/ClientProjects.jsx";
+import Messages from "./components/Messages.jsx";
+import ClientMessages from "./components/ClientMessages.jsx";
+import Schedules from "./components/Schedules.jsx";
+import ClientSchedules from "./components/ClientSchedules.jsx";
+import Vendors from "./components/Vendors.jsx";
 import authService from "./services/authService.js";
 
 // Main App Component
@@ -152,14 +159,64 @@ function AppContent() {
         />
       </Route>
 
+      {/* Client Routes */}
       <Route
-        path="/client/dashboard"
+        path="/client/*"
         element={
           <ProtectedRoute allowedRoles={["client"]}>
-            <Dashboard username={username} role={userRole} userId={userId} />
+            <ClientDataProvider>
+              <ClientLayout onLogout={handleLogout} username={username} />
+            </ClientDataProvider>
           </ProtectedRoute>
         }
-      />
+      >
+        <Route
+          path="dashboard"
+          element={
+            <ClientDashboard
+              username={username}
+              role={userRole}
+              userId={userId}
+              userDetails={userDetails}
+            />
+          }
+        />
+        <Route
+          path="projects"
+          element={
+            <ClientProjects
+              username={username}
+              role={userRole}
+              userId={userId}
+            />
+          }
+        />
+        <Route
+          path="messages"
+          element={
+            <ClientMessages
+              username={username}
+              role={userRole}
+              userId={userId}
+            />
+          }
+        />
+        <Route
+          path="schedules"
+          element={
+            <ClientSchedules
+              username={username}
+              role={userRole}
+              userId={userId}
+            />
+          }
+        />
+        <Route
+          path="settings"
+          element={<ClientSettings userId={userId} role={userRole} />}
+        />
+        <Route path="*" element={<Navigate to="/client/dashboard" replace />} />
+      </Route>
 
       <Route
         path="/vendor/dashboard"
