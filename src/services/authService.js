@@ -20,10 +20,9 @@ const authService = {
     }
   },
 
-  getUser: function () {
-    // Retrieve user data from localStorage
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
+  getUser: () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    return user || null;
   },
 
   logout: function () {

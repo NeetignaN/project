@@ -1,136 +1,56 @@
-import credentials from "../data/credentials.json" with { type: "json" };
-import admins from "../data/admins.json" with { type: "json" };
-import clients from "../data/clients.json" with { type: "json" };
-import designers from "../data/designers.json" with { type: "json" };
-import vendors from "../data/vendors.json" with { type: "json" };
-import projects from "../data/projects.json" with { type: "json" };
-import products from "../data/products.json" with { type: "json" };
-import orders from "../data/orders.json" with { type: "json" };
-import conversations from "../data/conversations.json" with { type: "json" };
-import schedules from "../data/schedules.json" with { type: "json" };
+const BASE_URL = "http://localhost:5005";
 
-// Simulated delay to mimic real API calls
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// API service
 const api = {
-  // Authentication
-  login: async function (email, password, role) {
-    await delay(500); // Simulate network delay
+  login: async (email, password, role) => {
+    try {
+      const res = await fetch(`${BASE_URL}/credentials`);
+      const credentials = await res.json();
+      // console.log(`${role} from api login`);
 
-    const user = credentials.users.find(
-      (u) =>
-        u.email.toLowerCase() === email.toLowerCase() &&
-        u.password === password &&
-        (role === "any" || u.role === role)
-    );
+      const user = credentials.find(
+        (u) => u.email === email && u.password === password && u.role === role
+      );
 
-    if (!user) {
-      throw new Error("Invalid email or password");
+      if (!user) {
+        throw new Error("Invalid email or password");
+      }
+
+      const userId = user.id;
+
+      // Updated path for role-based user details
+      const detailsRes = await fetch(`${BASE_URL}/users/${role}/${userId}`);
+      if (!detailsRes.ok) {
+        throw new Error("User details not found");
+      }
+
+      const details = await detailsRes.json();
+
+      return {
+        success: true,
+        username: details.name,
+        userId: details.id,
+        role: role,
+        details: details,
+      };
+    } catch (error) {
+      throw error;
     }
-
-    // Get more user details based on role
-    let userDetails = null;
-
-    switch (user.role) {
-      case "client":
-        userDetails = clients.clients.find((c) => c.id === user.id);
-        break;
-
-      case "designer":
-        userDetails = designers.designers.find((d) => d.id === user.id);
-        console.log(userDetails); // Debugging
-        break;
-
-      case "vendor":
-        userDetails = vendors.vendors.find((v) => v.id === user.id);
-        break;
-
-      case "admin":
-        userDetails = admins.admins.find((a) => a.id === user.id);
-        break;
-
-      default:
-        console.log("Invalid role:", user.role);
-        break;
-    }
-
-    return {
-      success: true,
-      username: user.name,
-      userId: user.id,
-      role: user.role,
-      details: userDetails,
-    };
   },
 
-  // function for getting entire data of individual json files or if  ID is mentioned then data of that partical data info is fetched
-  getData: async (resourceType, id = null) => {
-    await delay(300); // Simulate network delay
+  getData: async (resourceType, id = "") => {
+    // Updated path for generic resource
+    const path = id
+      ? `${BASE_URL}/resources/${resourceType}/${id}`
+      : `${BASE_URL}/${resourceType}`;
 
-    let data;
-
-    switch (resourceType) {
-      case "clients":
-        data = id ? clients.clients.find((c) => c.id === id) : clients.clients;
-        break;
-      case "designers":
-        data = id
-          ? designers.designers.find((d) => d.id === id)
-          : designers.designers;
-        break;
-      case "vendors":
-        data = id ? vendors.vendors.find((v) => v.id === id) : vendors.vendors;
-        break;
-      case "admins":
-        data = id ? admins.admins.find((a) => a.id === id) : admins.admins;
-        break;
-      case "projects":
-        data = id
-          ? projects.projects.find((p) => p.id === id)
-          : projects.projects;
-        break;
-      case "products":
-        data = id
-          ? products.products.find((p) => p.id === id)
-          : products.products;
-        break;
-      case "productCategories":
-        data = products.product_categories;
-        break;
-      case "orders":
-        data = id ? orders.orders.find((o) => o.id === id) : orders.orders;
-        break;
-      case "payments":
-        data = orders.payments;
-        break;
-      case "conversations":
-        data =  id
-        ? conversations.conversations.find((c) => c.id === id) : conversations.conversations;
-        break;
-      case "credentials":
-        data = credentials.users;
-        break;
-      case "schedules":
-        data = id
-          ? schedules.schedules.find((s) => s.id === id)
-          : schedules.schedules;
-        break;
-      default:
-        throw new Error(`Unknown resource type: ${resourceType}`);
+    const res = await fetch(path);
+    if (!res.ok) {
+      throw new Error("Resource not found");
     }
-
-    if (id && !data) {
-      throw new Error(`Resource not found: ${resourceType} with id ${id}`);
-    }
-
-    return data;
+    return await res.json();
   },
 
-  // Get data related to a specific user
   getUserData: async (userId, userRole) => {
-    await delay(300); // Simulate network delay
-
     const result = {
       credentials: [],
       projects: [],
@@ -140,47 +60,132 @@ const api = {
       schedules: [],
       designers: [],
       orders: [],
+      products: [],
     };
 
-    switch (userRole) {
-      case "designer":
-        result.projects = projects.projects.filter(p => p.designer_id === userId);
-        result.clients = Array.from(new Set(result.projects.map(p => p.client_id)))
-          .map(clientId => clients.clients.find(c => c.id === clientId));
-        result.vendors = vendors.vendors.filter(v => designers.designers.find(d => d.id   === userId)?.vendor_connections.includes(v.id));
-        result.conversations = conversations.conversations.filter(c => c.participants.includes(userId));
-        result.orders = orders.orders.filter(o => o.designer_id === userId); 
-        result.schedules = schedules.schedules.filter(s => s.designer_id === userId);
-        console.log(result);
-        break;
+    const fetchAll = async (endpoint) => {
+      const res = await fetch(`${BASE_URL}/${endpoint}`);
+      if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
+      return await res.json();
+    };
 
-      case "client":
-        result.projects = projects.projects.filter(p => p.client_id === userId);
-        result.conversations = conversations.conversations.filter(c => c.participants.includes(userId));
-        result.schedules = schedules.schedules.filter(s => s.client_id === userId);
-        break;
+    try {
+      switch (userRole) {
+        case "designer": {
+          const [
+            projectsData,
+            clientsData,
+            vendorsData,
+            designersData,
+            conversationsData,
+            schedulesData,
+            ordersData,
+          ] = await Promise.all([
+            fetchAll("projects"),
+            fetchAll("clients"),
+            fetchAll("vendors"),
+            fetchAll("designers"),
+            fetchAll("conversations"),
+            fetchAll("schedules"),
+            fetchAll("orders"),
+          ]);
 
-      case "vendor":
-        result.conversations = conversations.conversations.filter(c => c.participants.includes(userId));
-        result.products = products.products.filter(p => p.vendor_id === userId);
-        result.schedules = schedules.schedules.filter(s => s.vendor_id === userId);
-        break;
+          result.projects = projectsData.filter(
+            (p) => p.designer_id === userId
+          );
 
-      case "admin":
-        result.credentials = credentials.users;
-        result.designers = designers.designers;
-        result.clients = clients.clients;
-        result.vendors = vendors.vendors;
-        result.schedules = schedules.schedules;
-        break;
+          const uniqueClientIds = [
+            ...new Set(result.projects.map((p) => p.client_id)),
+          ];
+          result.clients = uniqueClientIds.map((cid) =>
+            clientsData.find((c) => c.id === cid)
+          );
 
-      default:
-        throw new Error(`Invalid role: ${userRole}`);
+          const currentDesigner = designersData.find((d) => d.id === userId);
+          result.vendors = vendorsData.filter((v) =>
+            currentDesigner?.vendor_connections?.includes(v.id)
+          );
+
+          result.conversations = conversationsData.filter((c) =>
+            c.participants.includes(userId)
+          );
+          result.orders = ordersData.filter((o) => o.designer_id === userId);
+          result.schedules = schedulesData.filter(
+            (s) => s.designer_id === userId
+          );
+          break;
+        }
+
+        case "client": {
+          const [projectsData, conversationsData, schedulesData] =
+            await Promise.all([
+              fetchAll("projects"),
+              fetchAll("conversations"),
+              fetchAll("schedules"),
+            ]);
+
+          result.projects = projectsData.filter((p) => p.client_id === userId);
+          result.conversations = conversationsData.filter((c) =>
+            c.participants.includes(userId)
+          );
+          result.schedules = schedulesData.filter(
+            (s) => s.client_id === userId
+          );
+          break;
+        }
+
+        case "vendor": {
+          const [conversationsData, productsData, schedulesData] =
+            await Promise.all([
+              fetchAll("conversations"),
+              fetchAll("products"),
+              fetchAll("schedules"),
+            ]);
+
+          result.conversations = conversationsData.filter((c) =>
+            c.participants.includes(userId)
+          );
+          result.products = productsData.filter((p) => p.vendor_id === userId);
+          result.schedules = schedulesData.filter(
+            (s) => s.vendor_id === userId
+          );
+          break;
+        }
+
+        case "admin": {
+          const [
+            credentialsData,
+            designersData,
+            clientsData,
+            vendorsData,
+            schedulesData,
+          ] = await Promise.all([
+            fetchAll("credentials"),
+            fetchAll("designers"),
+            fetchAll("clients"),
+            fetchAll("vendors"),
+            fetchAll("schedules"),
+          ]);
+
+          result.credentials = credentialsData;
+          result.designers = designersData;
+          result.clients = clientsData;
+          result.vendors = vendorsData;
+          result.schedules = schedulesData;
+          break;
+        }
+
+        default:
+          throw new Error(`Invalid role: ${userRole}`);
+      }
+
+      console.log(result);
+      return result;
+    } catch (err) {
+      console.error("❌ Error in getUserData:", err);
+      throw err;
     }
-    console.log(result);
-    return result;
   },
-
 };
 
 export default api;

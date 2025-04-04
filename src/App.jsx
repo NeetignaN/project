@@ -37,7 +37,7 @@ function AppContent() {
   useEffect(function () {
     async function checkAuth() {
       const user = authService.getUser(); // Fetch stored user data
-      if (user) {
+      if (user && user.role) {
         setIsAuthenticated(true);
         setUsername(user.username);
         setUserRole(user.role.toLowerCase());
@@ -86,7 +86,7 @@ function AppContent() {
       <Route
         path="/login"
         element={
-          isAuthenticated ? (
+          isAuthenticated && userRole ? (
             <Navigate to={`/${userRole}/dashboard`} replace />
           ) : (
             <Login onLoginSuccess={handleLoginSuccess} />

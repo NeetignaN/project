@@ -27,6 +27,7 @@ function DesignerDashboard({ userDetails, userId, role }) {
     const fetchDesignerData = async () => {
       try {
         setLoading(true);
+        console.log("userId:", userId, "role:", role);
 
         if (userId && projects.length === 0 && clients.length === 0) {
           // Fetch data from the API only if context data is empty
