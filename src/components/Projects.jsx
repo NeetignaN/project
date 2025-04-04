@@ -1,50 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import api from "../services/api.js";
 import { FiCalendar, FiClock, FiDollarSign, FiPlus } from "react-icons/fi";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Projects.module.css";
 import { useDesignerData } from "../contexts/DesignerDataContext";
+import ProjectDetails from "./ProjectDetails";
 
 function Projects({ username, role, userId }) {
   const { projects, clients } = useDesignerData();
   console.log("Projects in Projects Component:", projects);
   console.log("Clients in Projects Component:", clients);
 
-  // const [projects, setProjects] = useState([]);
-  // const [clients, setClients] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState(null);
+  // State for the project details modal
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setLoading(true);
+  // Function to handle opening the project details
+  const handleViewDetails = (project) => {
+    setSelectedProject(project);
+    setShowDetailsModal(true);
+  };
 
-  //       // Fetch projects data
-  //       const projectsData = await api.getData("projects");
-  //       setProjects(projectsData);
-
-  //       // Fetch clients data for project client names
-  //       const clientsData = await api.getData("clients");
-  //       setClients(clientsData);
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //       setError("Failed to load projects. Please try again later.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
-
-  // if (loading) {
-  //   return <div className="text-center py-5">Loading projects...</div>;
-  // }
-
-  // if (error) {
-  //   return <div className="alert alert-danger m-3">{error}</div>;
-  // }
+  // Function to handle closing the project details
+  const handleCloseDetails = () => {
+    setShowDetailsModal(false);
+  };
 
   if (projects.length === 0) {
     return <div className="alert alert-info m-3">No projects found.</div>;
@@ -75,6 +55,10 @@ function Projects({ username, role, userId }) {
   const getClientName = (clientId) => {
     const client = clients.find((c) => c.id === clientId);
     return client?.name || "Unknown Client";
+  };
+
+  const getClient = (clientId) => {
+    return clients.find((c) => c.id === clientId) || { name: "Unknown Client" };
   };
 
   const formatDate = (dateString) => {
@@ -109,7 +93,10 @@ function Projects({ username, role, userId }) {
 
           if (project.status === "completed") {
             progress = 100;
-          } else if (project.status === "in_progress") {
+          } else if (
+            project.status === "in_progress" ||
+            project.status === "active"
+          ) {
             // Mock value, would be calculated based on timeline/tasks
             progress = 30;
           }
@@ -178,15 +165,28 @@ function Projects({ username, role, userId }) {
                   )}
                 </div>
                 <div className="card-footer bg-white border-top-0">
-                  <a href="#" className="btn btn-outline-primary w-100">
+                  <button
+                    className="btn btn-outline-primary w-100"
+                    onClick={() => handleViewDetails(project)}
+                  >
                     View Details
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Project Details Modal */}
+      {selectedProject && (
+        <ProjectDetails
+          project={selectedProject}
+          client={getClient(selectedProject.client_id)}
+          show={showDetailsModal}
+          onClose={handleCloseDetails}
+        />
+      )}
     </div>
   );
 }

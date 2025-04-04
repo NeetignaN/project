@@ -295,3 +295,10 @@ const calculateProgress = (project) => {
         </div>
       </section>
     </>
+
+
+    mongosh "mongodb+srv://cluster0.neghgjm.mongodb.net/" --apiVersion 1 --username nagulaneetigna
+
+
+
+    mongodb+srv://neetigna:<MI1V09FU77pNfGbN>@interioracluster.hkr1j6f.mongodb.net/
