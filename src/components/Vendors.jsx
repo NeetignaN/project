@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import api from "../services/api";
 import { useDesignerData } from "../contexts/DesignerDataContext";
 import { useNavigate } from "react-router-dom";
 import styles from "./Vendors.module.css";
@@ -14,10 +13,11 @@ import {
   FiPlus,
 } from "react-icons/fi";
 
+import api from "../services/api";
+
 function Vendors({ username, role, userId }) {
-  const [vendors, setVendors] = useState([]);
+  const { vendors, setVendors, products, setProducts } = useDesignerData();
   const [selectedVendor, setSelectedVendor] = useState(null);
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,27 +34,35 @@ function Vendors({ username, role, userId }) {
   const [materialInput, setMaterialInput] = useState("");
   const navigate = useNavigate();
 
-  // Fetch vendors and products data
+  // Fetch vendors and products data only if context data is empty
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
+    const fetchDesignerVendors = async () => {
       try {
-        // Get vendors associated with the logged-in designer
-        const userData = await api.getUserData(userId, role);
-        setVendors(userData.vendors || []);
+        setLoading(true);
 
-        // Fetch all products for filtering by vendor later
-        const allProducts = await api.getData("products");
-        setProducts(allProducts);
+        if (userId && vendors.length === 0) {
+          // Fetch data from the API only if context data is empty
+          const data = await api.getUserData(userId, role);
+
+          // Save data to context
+          setVendors(data.vendors);
+          console.log("Fetched Vendors from API:", data.vendors);
+
+          //Fetch all products
+          if (products.length === 0) {
+            const allProducts = await api.getData("products");
+            setProducts(allProducts);
+          }
+        }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching data from API:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Ensure loading is set to false after fetching
       }
-    }
+    };
 
-    fetchData();
-  }, [userId, role]);
+    fetchDesignerVendors();
+  }, [userId, role, vendors, products, setVendors, setProducts]);
 
   // Filter vendors based on search query
   const filteredVendors = vendors.filter(
@@ -69,6 +77,7 @@ function Vendors({ username, role, userId }) {
   const vendorProducts = selectedVendor
     ? products.filter((product) => product.vendor_id === selectedVendor.id)
     : [];
+  console.log(vendorProducts);
 
   // Toggle product details
   const toggleProductDetails = (productId) => {
@@ -121,14 +130,14 @@ function Vendors({ username, role, userId }) {
     e.preventDefault();
 
     // In a real app, this would send a request to the API
-    // For now, we'll just add it to the local state
+    // For now, we'll just add it to the context state
     const newVendor = {
       ...newVendorData,
       id: `vendor_${Date.now()}`, // Generate a unique ID
       avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d", // Default avatar
     };
 
-    setVendors([...vendors, newVendor]);
+    setVendors([...vendors, newVendor]); // Update context state
 
     // Reset form
     setNewVendorData({
@@ -146,8 +155,6 @@ function Vendors({ username, role, userId }) {
 
   // Navigate to Messages with the selected vendor
   const handleSendMessage = (vendor) => {
-    // In a real app, this would perhaps create a new conversation if one doesn't exist
-    // For now, we'll just navigate to the messages page
     navigate("/designer/messages", {
       state: {
         vendorId: vendor.id,
