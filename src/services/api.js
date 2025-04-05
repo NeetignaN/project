@@ -146,12 +146,17 @@ const api = {
         }
 
         case "vendor": {
-          const [conversationsData, productsData, schedulesData] =
-            await Promise.all([
-              fetchAll("conversations"),
-              fetchAll("products"),
-              fetchAll("schedules"),
-            ]);
+          const [
+            conversationsData,
+            productsData,
+            schedulesData,
+            designersData,
+          ] = await Promise.all([
+            fetchAll("conversations"),
+            fetchAll("products"),
+            fetchAll("schedules"),
+            fetchAll("designers"),
+          ]);
 
           result.conversations = conversationsData.filter((c) =>
             c.participants.includes(userId)
@@ -159,6 +164,9 @@ const api = {
           result.products = productsData.filter((p) => p.vendor_id === userId);
           result.schedules = schedulesData.filter(
             (s) => s.vendor_id === userId
+          );
+          result.designers = designersData.filter((d) =>
+            d.vendor_connections?.includes(userId)
           );
           console.log(result);
           break;

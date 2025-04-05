@@ -11,12 +11,14 @@ import {
   FiBarChart2,
   FiSearch,
   FiFilter,
+  FiX,
+  FiImage,
 } from "react-icons/fi";
 import api from "../services/api.js";
-import styles from "./Vendors.module.css"; // Reusing existing styles
+import styles from "./VendorProducts.module.css"; // Reusing existing styles
 
 function VendorProducts({ username, userId, role }) {
-  const { products, setProducts } = useVendorData();
+  const { products, setProducts, designers, setDesigners } = useVendorData();
   const [loading, setLoading] = useState(true);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,22 +37,30 @@ function VendorProducts({ username, userId, role }) {
     min_order_quantity: 1,
     lead_time: "",
     specifications: {},
+    designer_id: "",
   });
 
-  // Fetch products on component mount
+  // Fetch products and designers on component mount
   useEffect(() => {
-    const fetchVendorProducts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         console.log("userId:", userId, "role:", role);
 
-        if (userId && products.length === 0) {
-          // Fetch data from the API only if context data is empty
-          const data = await api.getUserData(userId, role);
+        if (userId) {
+          // Fetch product data from the API if context data is empty
+          if (products.length === 0) {
+            const data = await api.getUserData(userId, role);
+            setProducts(data.products || []);
+            console.log("Fetched Products from API:", data.products);
+          }
 
-          // Save data to context
-          setProducts(data.products || []);
-          console.log("Fetched Products from API:", data.products);
+          // Fetch designer data if empty
+          if (designers.length === 0) {
+            const designerData = await api.getDesigners();
+            setDesigners(designerData || []);
+            console.log("Fetched Designers from API:", designerData);
+          }
         }
       } catch (error) {
         console.error("Error fetching data from API:", error);
@@ -59,8 +69,15 @@ function VendorProducts({ username, userId, role }) {
       }
     };
 
-    fetchVendorProducts();
-  }, [userId, role, products.length, setProducts]);
+    fetchData();
+  }, [
+    userId,
+    role,
+    products.length,
+    designers.length,
+    setProducts,
+    setDesigners,
+  ]);
 
   // Update filtered products when products or search term changes
   useEffect(() => {
@@ -84,6 +101,13 @@ function VendorProducts({ username, userId, role }) {
     setFilteredProducts(filtered);
   };
 
+  // Find designer name by ID
+  const getDesignerName = (designerId) => {
+    if (!designerId) return "Not assigned";
+    const designer = designers.find((d) => d.id === designerId);
+    return designer ? designer.name : "Unknown Designer";
+  };
+
   // Handle adding a new product
   const handleAddProduct = () => {
     const productToAdd = {
@@ -91,6 +115,7 @@ function VendorProducts({ username, userId, role }) {
       id: `product_${Date.now()}`,
       vendor_id: userId,
       images: [], // Would be populated from actual image uploads
+      created_at: new Date().toISOString(),
     };
 
     setProducts([...products, productToAdd]);
@@ -106,6 +131,7 @@ function VendorProducts({ username, userId, role }) {
       min_order_quantity: 1,
       lead_time: "",
       specifications: {},
+      designer_id: "",
     });
   };
 
@@ -113,6 +139,15 @@ function VendorProducts({ username, userId, role }) {
   const openEditModal = (product) => {
     setSelectedProduct(product);
     setShowEditModal(true);
+  };
+
+  // Handle saving edited product
+  const handleSaveEdit = () => {
+    setProducts(
+      products.map((p) => (p.id === selectedProduct.id ? selectedProduct : p))
+    );
+    setShowEditModal(false);
+    setSelectedProduct(null);
   };
 
   // Handle deleting a product
@@ -132,6 +167,15 @@ function VendorProducts({ username, userId, role }) {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setNewProduct((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // Handle input changes for the edit product form
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setSelectedProduct((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
@@ -188,70 +232,96 @@ function VendorProducts({ username, userId, role }) {
         <div className={styles.productsGrid}>
           {filteredProducts.map((product) => (
             <div key={product.id} className={styles.productCard}>
-              <div className={styles.productHeader}>
-                <h3 className={styles.productName}>{product.name}</h3>
-                <div className={styles.productActions}>
-                  <button
-                    className={styles.editButton}
-                    onClick={() => openEditModal(product)}
-                  >
-                    <FiEdit2 />
-                  </button>
-                  <button
-                    className={styles.deleteButton}
-                    onClick={() => openDeleteModal(product)}
-                  >
-                    <FiTrash2 />
-                  </button>
-                </div>
-              </div>
-              <div className={styles.productDescription}>
-                {product.description}
-              </div>
-              <div className={styles.productMeta}>
-                <div className={styles.productPrice}>
-                  <FiDollarSign /> {product.price.toLocaleString()} /{" "}
-                  {product.unit}
-                </div>
-                <div className={styles.productCategory}>
-                  <span className={styles.categoryBadge}>
-                    {product.category}
-                  </span>
-                </div>
-              </div>
-              <div className={styles.productDetails}>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Stock:</span>
-                  <span className={styles.detailValue}>
-                    {product.in_stock
-                      ? `${product.stock_quantity} ${product.unit}s`
-                      : "Out of stock"}
-                  </span>
-                </div>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Min Order:</span>
-                  <span className={styles.detailValue}>
-                    {product.min_order_quantity} {product.unit}
-                    {product.min_order_quantity !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Lead Time:</span>
-                  <span className={styles.detailValue}>
-                    {product.lead_time}
-                  </span>
-                </div>
-              </div>
-              {product.used_in_projects &&
-                product.used_in_projects.length > 0 && (
-                  <div className={styles.productUsage}>
-                    <FiBarChart2 />
-                    <span>
-                      Used in {product.used_in_projects.length} project
-                      {product.used_in_projects.length !== 1 ? "s" : ""}
-                    </span>
+              <div className={styles.productImageContainer}>
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className={styles.productImage}
+                  />
+                ) : (
+                  <div className={styles.noImagePlaceholder}>
+                    <FiImage size={40} />
+                    <span>No Image</span>
                   </div>
                 )}
+              </div>
+              <div className={styles.productContent}>
+                <div className={styles.productHeader}>
+                  <h3 className={styles.productName}>{product.name}</h3>
+                  <div className={styles.productActions}>
+                    <button
+                      className={styles.editButton}
+                      onClick={() => openEditModal(product)}
+                      title="Edit product"
+                    >
+                      <FiEdit2 />
+                    </button>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => openDeleteModal(product)}
+                      title="Delete product"
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.productDescription}>
+                  {product.description}
+                </div>
+                <div className={styles.productMeta}>
+                  <div className={styles.productPrice}>
+                    <FiDollarSign /> {product.price.toLocaleString()} /{" "}
+                    {product.unit}
+                  </div>
+                  <div className={styles.productCategory}>
+                    <span className={styles.categoryBadge}>
+                      {product.category}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.productDetails}>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Stock:</span>
+                    <span className={styles.detailValue}>
+                      {product.in_stock
+                        ? `${product.stock_quantity} ${product.unit}s`
+                        : "Out of stock"}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Min Order:</span>
+                    <span className={styles.detailValue}>
+                      {product.min_order_quantity} {product.unit}
+                      {product.min_order_quantity !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Lead Time:</span>
+                    <span className={styles.detailValue}>
+                      {product.lead_time}
+                    </span>
+                  </div>
+                  {product.designer_id && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Designer:</span>
+                      <span className={styles.detailValue}>
+                        {getDesignerName(product.designer_id)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {product.used_in_projects &&
+                  product.used_in_projects.length > 0 && (
+                    <div className={styles.productUsage}>
+                      <FiBarChart2 />
+                      <span>
+                        Used in {product.used_in_projects.length} project
+                        {product.used_in_projects.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  )}
+              </div>
             </div>
           ))}
         </div>
@@ -260,14 +330,14 @@ function VendorProducts({ username, userId, role }) {
       {/* Add Product Modal */}
       {showAddModal && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
+          <div className={styles.modalLarge}>
             <div className={styles.modalHeader}>
               <h2>Add New Product</h2>
               <button
                 className={styles.closeButton}
                 onClick={() => setShowAddModal(false)}
               >
-                &times;
+                <FiX size={24} />
               </button>
             </div>
             <div className={styles.modalBody}>
@@ -286,6 +356,7 @@ function VendorProducts({ username, userId, role }) {
                     value={newProduct.name}
                     onChange={handleInputChange}
                     required
+                    className={styles.formInput}
                   />
                 </div>
                 <div className={styles.formGroup}>
@@ -296,9 +367,12 @@ function VendorProducts({ username, userId, role }) {
                     value={newProduct.description}
                     onChange={handleInputChange}
                     required
+                    className={styles.formTextarea}
+                    rows={4}
                   />
                 </div>
-                <div className={styles.formRow}>
+
+                <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label htmlFor="category">Category</label>
                     <select
@@ -307,6 +381,7 @@ function VendorProducts({ username, userId, role }) {
                       value={newProduct.category}
                       onChange={handleInputChange}
                       required
+                      className={styles.formSelect}
                     >
                       <option value="">Select Category</option>
                       <option value="wood">Wood</option>
@@ -327,10 +402,9 @@ function VendorProducts({ username, userId, role }) {
                       value={newProduct.price}
                       onChange={handleInputChange}
                       required
+                      className={styles.formInput}
                     />
                   </div>
-                </div>
-                <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label htmlFor="unit">Unit</label>
                     <input
@@ -341,6 +415,7 @@ function VendorProducts({ username, userId, role }) {
                       value={newProduct.unit}
                       onChange={handleInputChange}
                       required
+                      className={styles.formInput}
                     />
                   </div>
                   <div className={styles.formGroup}>
@@ -353,10 +428,9 @@ function VendorProducts({ username, userId, role }) {
                       value={newProduct.lead_time}
                       onChange={handleInputChange}
                       required
+                      className={styles.formInput}
                     />
                   </div>
-                </div>
-                <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label htmlFor="stock_quantity">Stock Quantity</label>
                     <input
@@ -367,6 +441,7 @@ function VendorProducts({ username, userId, role }) {
                       value={newProduct.stock_quantity}
                       onChange={handleInputChange}
                       required
+                      className={styles.formInput}
                     />
                   </div>
                   <div className={styles.formGroup}>
@@ -381,9 +456,28 @@ function VendorProducts({ username, userId, role }) {
                       value={newProduct.min_order_quantity}
                       onChange={handleInputChange}
                       required
+                      className={styles.formInput}
                     />
                   </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="designer_id">Designer</label>
+                    <select
+                      id="designer_id"
+                      name="designer_id"
+                      value={newProduct.designer_id}
+                      onChange={handleInputChange}
+                      className={styles.formSelect}
+                    >
+                      <option value="">Select Designer</option>
+                      {designers.map((designer) => (
+                        <option key={designer.id} value={designer.id}>
+                          {designer.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+
                 <div className={styles.formGroup}>
                   <label className={styles.checkboxLabel}>
                     <input
@@ -413,6 +507,184 @@ function VendorProducts({ username, userId, role }) {
         </div>
       )}
 
+      {/* Edit Product Modal */}
+      {showEditModal && selectedProduct && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalLarge}>
+            <div className={styles.modalHeader}>
+              <h2>Edit Product</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowEditModal(false)}
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSaveEdit();
+                }}
+              >
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-name">Product Name</label>
+                  <input
+                    type="text"
+                    id="edit-name"
+                    name="name"
+                    value={selectedProduct.name}
+                    onChange={handleEditChange}
+                    required
+                    className={styles.formInput}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-description">Description</label>
+                  <textarea
+                    id="edit-description"
+                    name="description"
+                    value={selectedProduct.description}
+                    onChange={handleEditChange}
+                    required
+                    className={styles.formTextarea}
+                    rows={4}
+                  />
+                </div>
+
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-category">Category</label>
+                    <select
+                      id="edit-category"
+                      name="category"
+                      value={selectedProduct.category}
+                      onChange={handleEditChange}
+                      required
+                      className={styles.formSelect}
+                    >
+                      <option value="">Select Category</option>
+                      <option value="wood">Wood</option>
+                      <option value="metal">Metal</option>
+                      <option value="fabric">Fabric</option>
+                      <option value="lighting">Lighting</option>
+                      <option value="fixtures">Fixtures</option>
+                    </select>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-price">Price</label>
+                    <input
+                      type="number"
+                      id="edit-price"
+                      name="price"
+                      min="0"
+                      step="0.01"
+                      value={selectedProduct.price}
+                      onChange={handleEditChange}
+                      required
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-unit">Unit</label>
+                    <input
+                      type="text"
+                      id="edit-unit"
+                      name="unit"
+                      value={selectedProduct.unit}
+                      onChange={handleEditChange}
+                      required
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-lead_time">Lead Time</label>
+                    <input
+                      type="text"
+                      id="edit-lead_time"
+                      name="lead_time"
+                      value={selectedProduct.lead_time}
+                      onChange={handleEditChange}
+                      required
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-stock_quantity">Stock Quantity</label>
+                    <input
+                      type="number"
+                      id="edit-stock_quantity"
+                      name="stock_quantity"
+                      min="0"
+                      value={selectedProduct.stock_quantity}
+                      onChange={handleEditChange}
+                      required
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-min_order_quantity">
+                      Min Order Quantity
+                    </label>
+                    <input
+                      type="number"
+                      id="edit-min_order_quantity"
+                      name="min_order_quantity"
+                      min="1"
+                      value={selectedProduct.min_order_quantity}
+                      onChange={handleEditChange}
+                      required
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-designer_id">Designer</label>
+                    <select
+                      id="edit-designer_id"
+                      name="designer_id"
+                      value={selectedProduct.designer_id || ""}
+                      onChange={handleEditChange}
+                      className={styles.formSelect}
+                    >
+                      <option value="">Select Designer</option>
+                      {designers.map((designer) => (
+                        <option key={designer.id} value={designer.id}>
+                          {designer.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      name="in_stock"
+                      checked={selectedProduct.in_stock}
+                      onChange={handleEditChange}
+                    />
+                    <span>In Stock</span>
+                  </label>
+                </div>
+                <div className={styles.formActions}>
+                  <button
+                    type="button"
+                    className={styles.cancelButton}
+                    onClick={() => setShowEditModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className={styles.saveButton}>
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedProduct && (
         <div className={styles.modalOverlay}>
@@ -423,7 +695,7 @@ function VendorProducts({ username, userId, role }) {
                 className={styles.closeButton}
                 onClick={() => setShowDeleteModal(false)}
               >
-                &times;
+                <FiX size={24} />
               </button>
             </div>
             <div className={styles.modalBody}>

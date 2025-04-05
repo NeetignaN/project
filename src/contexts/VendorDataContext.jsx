@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const VendorDataContext = createContext();
 
@@ -11,11 +11,45 @@ export function useVendorData() {
 }
 
 export function VendorDataProvider({ children }) {
+  // Safely parse data from localStorage
+  const safeParse = (key) => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : [];
+    } catch (error) {
+      console.error(`Error parsing localStorage key "${key}":`, error);
+      return [];
+    }
+  };
+
   // State for storing data from API
-  const [products, setProducts] = useState([]);
-  const [conversations, setConversations] = useState([]);
-  const [schedules, setSchedules] = useState([]);
-  const [designers, setDesigners] = useState([]); // For tracking which designers use vendor's products
+  const [products, setProducts] = useState(safeParse("vendorProducts"));
+  const [conversations, setConversations] = useState(
+    safeParse("vendorConversations")
+  );
+  const [schedules, setSchedules] = useState(safeParse("vendorSchedules"));
+  const [designers, setDesigners] = useState(safeParse("vendorDesigners"));
+
+  // Sync data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("vendorProducts", JSON.stringify(products));
+    console.log("Updated Products in localStorage:", products);
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem("vendorConversations", JSON.stringify(conversations));
+    console.log("Updated Conversations in localStorage:", conversations);
+  }, [conversations]);
+
+  useEffect(() => {
+    localStorage.setItem("vendorSchedules", JSON.stringify(schedules));
+    console.log("Updated Schedules in localStorage:", schedules);
+  }, [schedules]);
+
+  useEffect(() => {
+    localStorage.setItem("vendorDesigners", JSON.stringify(designers));
+    console.log("Updated Designers in localStorage:", designers);
+  }, [designers]);
 
   // Values to provide through the context
   const value = {

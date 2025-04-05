@@ -24,6 +24,8 @@ function VendorDashboard({ userDetails, userId, role }) {
     setConversations,
     schedules,
     setSchedules,
+    designers,
+    setDesigners,
   } = useVendorData();
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +48,7 @@ function VendorDashboard({ userDetails, userId, role }) {
           setProducts(data.products || []);
           setConversations(data.conversations || []);
           setSchedules(data.schedules || []);
+          setDesigners(data.designers || []);
 
           console.log("Fetched Vendor Data from API:", data);
         }

@@ -13,7 +13,8 @@ import api from "../services/api.js";
 import styles from "./Messages.module.css"; // Reusing existing styles
 
 function VendorMessages({ username, role, userId }) {
-  const { conversations, setConversations, products } = useVendorData();
+  const { conversations, setConversations, products, designers, setDesigners } =
+    useVendorData();
   const [filteredConversations, setFilteredConversations] = useState(null);
   const [activeConversation, setActiveConversation] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,19 +59,32 @@ function VendorMessages({ username, role, userId }) {
     }
   }, [location, navigate, conversations, userId, isLoading]);
 
-  // Fetch conversations
+  // Fetch conversations and designers data
   useEffect(() => {
-    const fetchVendorConvos = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
 
-        if (userId && conversations.length === 0) {
-          // Fetch data from the API only if context data is empty
-          const data = await api.getUserData(userId, role);
+        if (userId) {
+          // Fetch conversations from the API if context data is empty
+          if (conversations.length === 0) {
+            const data = await api.getUserData(userId, role);
+            setConversations(data.conversations || []);
+            console.log("Fetched Conversations from API:", data.conversations);
+          }
 
-          // Save data to context
-          setConversations(data.conversations || []);
-          console.log("Fetched Conversations from API:", data.conversations);
+          // Fetch designer data if empty
+          if (designers.length === 0) {
+            try {
+              const designerData = await api.getDesigners();
+              if (designerData) {
+                setDesigners(designerData);
+                console.log("Fetched Designers from API:", designerData);
+              }
+            } catch (error) {
+              console.error("Error fetching designers:", error);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching data from API:", error);
@@ -79,8 +93,15 @@ function VendorMessages({ username, role, userId }) {
       }
     };
 
-    fetchVendorConvos();
-  }, [userId, role, conversations.length, setConversations]);
+    fetchData();
+  }, [
+    userId,
+    role,
+    conversations.length,
+    designers.length,
+    setConversations,
+    setDesigners,
+  ]);
 
   // Apply filters when filter type or value changes
   useEffect(() => {
@@ -89,7 +110,10 @@ function VendorMessages({ username, role, userId }) {
 
   // Handle filtering conversations
   const filterConversations = () => {
-    if (!conversations) return;
+    if (!conversations || conversations.length === 0) {
+      setFilteredConversations([]);
+      return;
+    }
 
     let filtered = [...conversations];
 
@@ -144,13 +168,20 @@ function VendorMessages({ username, role, userId }) {
     setNewMessage(""); // Clear input
   };
 
-  // Get the participant name (assuming it's a designer in most cases)
+  // Get the participant name (designer or client)
   const getParticipantName = (participantId) => {
     if (participantId === userId) return "You";
 
-    // In a real app, you'd fetch the designer name from a list of designers
-    // For now, just show "Designer" with the ID
-    return `Designer ${participantId.split("_")[1]}`;
+    // Try to find the designer by ID
+    const designer = designers.find((d) => d.id === participantId);
+    if (designer) {
+      return designer.name;
+    }
+
+    // If no match found, use a generic name based on ID
+    const idParts = participantId.split("_");
+    const role = idParts[0].charAt(0).toUpperCase() + idParts[0].slice(1);
+    return `${role} ${idParts[1] || ""}`;
   };
 
   // Get the product name if related to a product
