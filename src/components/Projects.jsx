@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../services/api.js";
 import { FiCalendar, FiClock, FiDollarSign, FiPlus, FiX } from "react-icons/fi";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -6,9 +6,12 @@ import styles from "./Projects.module.css";
 import { useDesignerData } from "../contexts/DesignerDataContext";
 import ProjectDetails from "./ProjectDetails";
 import { Modal, Button, Form } from "react-bootstrap";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function Projects({ username, role, userId }) {
   const { projects, clients, setProjects } = useDesignerData();
+  const location = useLocation();
+  const navigate = useNavigate();
   console.log("Projects in Projects Component:", projects);
   console.log("Clients in Projects Component:", clients);
 
@@ -124,6 +127,19 @@ function Projects({ username, role, userId }) {
       // Here you would typically show an error message to the user
     }
   };
+
+  // Check if there's a project ID in the location state and open the modal
+  useEffect(() => {
+    if (location.state?.projectId) {
+      const project = projects.find((p) => p.id === location.state.projectId);
+      if (project) {
+        setSelectedProject(project);
+        setShowDetailsModal(true);
+        // Clear the location state to avoid reopening modal on refresh
+        navigate(location.pathname, { replace: true });
+      }
+    }
+  }, [location, projects, navigate]);
 
   if (projects.length === 0) {
     return (

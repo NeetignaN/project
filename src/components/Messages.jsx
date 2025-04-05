@@ -14,12 +14,12 @@ import api from "../services/api.js";
 import styles from "./Messages.module.css";
 
 function Messages({ username, role, userId }) {
-  const { conversations, setConversations, projects, clients } =
+  const { conversations, setConversations, projects, clients, vendors } =
     useDesignerData();
   const [filteredConversations, setFilteredConversations] = useState(null);
   const [activeConversation, setActiveConversation] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all"); // all, projects, clients
+  const [filterType, setFilterType] = useState("all"); // all, projects, clients, vendors
   const [filterValue, setFilterValue] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
@@ -98,11 +98,22 @@ function Messages({ username, role, userId }) {
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter((conv) => {
         const participantMatches = conv.participants.some((participantId) => {
+          // Check if participant is a client
           const client = clients.find((c) => c.id === participantId);
-
           if (client) {
             return client.name.toLowerCase().includes(searchTerm.toLowerCase());
           }
+
+          // Check if participant is a vendor
+          const vendor = vendors.find((v) => v.id === participantId);
+          if (vendor) {
+            return (
+              vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (vendor.contact &&
+                vendor.contact.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+          }
+
           return false;
         });
 
@@ -118,6 +129,10 @@ function Messages({ username, role, userId }) {
     if (filterType === "projects" && filterValue !== "all") {
       filtered = filtered.filter((conv) => conv.project_id === filterValue);
     } else if (filterType === "clients" && filterValue !== "all") {
+      filtered = filtered.filter((conv) =>
+        conv.participants.includes(filterValue)
+      );
+    } else if (filterType === "vendors" && filterValue !== "all") {
       filtered = filtered.filter((conv) =>
         conv.participants.includes(filterValue)
       );
@@ -161,8 +176,13 @@ function Messages({ username, role, userId }) {
   const getParticipantName = (participantId) => {
     if (participantId === userId) return "You";
 
+    // Check if participant is a client
     const client = clients.find((c) => c.id === participantId);
     if (client) return client.name;
+
+    // Check if participant is a vendor
+    const vendor = vendors.find((v) => v.id === participantId);
+    if (vendor) return vendor.contact || vendor.name;
 
     return "Unknown User";
   };
@@ -257,6 +277,7 @@ function Messages({ username, role, userId }) {
                   <option value="all">All Messages</option>
                   <option value="projects">By Project</option>
                   <option value="clients">By Client</option>
+                  <option value="vendors">By Vendor</option>
                 </select>
               </div>
 
@@ -278,6 +299,12 @@ function Messages({ username, role, userId }) {
                       clients.map((client) => (
                         <option key={client.id} value={client.id}>
                           {client.name}
+                        </option>
+                      ))}
+                    {filterType === "vendors" &&
+                      vendors.map((vendor) => (
+                        <option key={vendor.id} value={vendor.id}>
+                          {vendor.contact || vendor.name}
                         </option>
                       ))}
                   </select>

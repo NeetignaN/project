@@ -2,11 +2,12 @@
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid #eaeaea;
 }
 
 .clientCard:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
 }
 
 .avatar {
@@ -14,6 +15,9 @@
     height: 48px;
     border-radius: 50%;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .avatar img {
@@ -47,4 +51,33 @@
 
 .contactLink:hover {
     color: #6c5ce7;
+}
+
+/* Add large avatar styles for client details modal */
+.avatarLarge {
+    width: 64px;
+    height: 64px;
+    overflow: hidden;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatarLarge img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.initialsAvatarLarge {
+    width: 100%;
+    height: 100%;
+    background-color: #6e62e5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
 }

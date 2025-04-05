@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDesignerData } from "../contexts/DesignerDataContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiUser,
   FiPlus,
@@ -23,6 +23,8 @@ import api from "../services/api.js";
 function DesignerDashboard({ userDetails, userId, role }) {
   const { projects, setProjects, clients, setClients } = useDesignerData();
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchDesignerData = async () => {
       try {
@@ -49,83 +51,6 @@ function DesignerDashboard({ userDetails, userId, role }) {
 
     fetchDesignerData();
   }, [userId, role, projects.length, clients.length, setProjects, setClients]);
-
-  // Safely load data from localStorage with fallback to an empty array
-  // const safeParse = (key) => {
-  //   try {
-  //     const item = localStorage.getItem(key);
-  //     return item ? JSON.parse(item) : [];
-  //   } catch (error) {
-  //     console.error(`Error parsing localStorage key "${key}":`, error);
-  //     return [];
-  //   }
-  // };
-
-  // const [projects, setProjects] = useState(() => safeParse("projects"));
-  // const [clients, setClients] = useState(() => safeParse("clients"));
-  // const [conversations, setConversations] = useState(() =>
-  // safeParse("conversations"));
-
-  // useEffect(() => {
-  //   const fetchDesignerData = async () => {
-  //     try {
-  //       if (userId) {
-  //         // Fetching data from the API
-  //         const data = await api.getUserData(userId, role);
-
-  //         // Save data to state and localStorage
-  //         setProjects(data.projects);
-  //         // console.log("Fetched Projects:", data.projects);
-  //         localStorage.setItem("projects", JSON.stringify(data.projects));
-
-  //         setClients(data.clients);
-  //         // console.log("Fetched Clients:", data.clients);
-  //         localStorage.setItem("clients", JSON.stringify(data.clients));
-
-  //         // setConversations(data.conversations);
-  //         // localStorage.setItem(
-  //         //   "conversations",
-  //         //   JSON.stringify(data.conversations)
-  //         // );
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  // Check if data already exists in localStorage
-  //   const storedProjects = localStorage.getItem("projects");
-  //   const storedClients = localStorage.getItem("clients");
-  //   // const storedConversations = localStorage.getItem("conversations");
-
-  //   if (!storedProjects || !storedClients) {
-  //     // Fetch data from the API if not already in localStorage
-  //     fetchDesignerData();
-  //   } else {
-  //     // Load data from localStorage into state
-  //     setProjects(JSON.parse(storedProjects));
-  //     setClients(JSON.parse(storedClients));
-  //     // setConversations(JSON.parse(storedConversations));
-  //     setLoading(false);
-  //   }
-  // }, [userId, role]);
-
-  // Check if data already exists in localStorage
-  //   const storedProjects = safeParse("projects");
-  //   const storedClients = safeParse("clients");
-
-  //   if (storedProjects.length > 0 && storedClients.length > 0) {
-  //     // Load data from localStorage into context
-  //     setProjects(storedProjects);
-  //     setClients(storedClients);
-  //     setLoading(false);
-  //   } else {
-  //     // Fetch data from the API if not already in localStorage
-  //     fetchDesignerData();
-  //   }
-  // }, [userId, role, setProjects, setClients]);
 
   // Calculate summary statistics
   const projectCount = projects?.length || 0;
@@ -176,6 +101,20 @@ function DesignerDashboard({ userDetails, userId, role }) {
     if (project.status === "in_progress" || project.status === "active")
       return 30; // Mock value
     return 0;
+  };
+
+  // Handler for viewing project details
+  const handleViewProjectDetails = (project) => {
+    navigate("/designer/projects", {
+      state: { projectId: project.id },
+    });
+  };
+
+  // Handler for viewing client details
+  const handleViewClientDetails = (client) => {
+    navigate("/designer/clients", {
+      state: { clientId: client.id },
+    });
   };
 
   return (
@@ -298,12 +237,12 @@ function DesignerDashboard({ userDetails, userId, role }) {
                       </div>
                     </div>
                     <div className="card-footer bg-white border-top-0">
-                      <a
-                        href="#"
+                      <button
+                        onClick={() => handleViewProjectDetails(project)}
                         className="btn btn-sm btn-outline-primary w-100"
                       >
                         View Details
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -411,9 +350,12 @@ function DesignerDashboard({ userDetails, userId, role }) {
                         <span className="badge bg-light text-dark">
                           ${client.total_spend?.toLocaleString() || 0}
                         </span>
-                        <a href="#" className="btn btn-sm btn-outline-primary">
+                        <button
+                          onClick={() => handleViewClientDetails(client)}
+                          className="btn btn-sm btn-outline-primary"
+                        >
                           View Details
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </div>

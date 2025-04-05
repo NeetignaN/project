@@ -14,6 +14,9 @@ import {
   FiUserPlus,
   FiRefreshCw,
   FiCheck,
+  FiPackage,
+  FiShoppingCart,
+  FiImage,
 } from "react-icons/fi";
 
 import api from "../services/api";
@@ -39,6 +42,8 @@ function Vendors({ username, role, userId }) {
   const [allVendors, setAllVendors] = useState([]);
   const [addingVendor, setAddingVendor] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showProductImageModal, setShowProductImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
   const navigate = useNavigate();
 
   // Fetch vendors and products data only if context data is empty
@@ -216,6 +221,22 @@ function Vendors({ username, role, userId }) {
     }
   };
 
+  // Show product image in modal
+  const handleShowImage = (image, e) => {
+    e.stopPropagation();
+    setSelectedImage(image);
+    setShowProductImageModal(true);
+  };
+
+  // Format image URL to get a usable version
+  const formatImageUrl = (url) => {
+    // If URL is from Unsplash, convert it to a direct image URL
+    if (url.includes("unsplash.com/photos") && !url.includes("?")) {
+      return `${url}/download?w=800`;
+    }
+    return url;
+  };
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Vendors</h1>
@@ -368,16 +389,19 @@ function Vendors({ username, role, userId }) {
                               </span>
                             </div>
                           </div>
+                        </div>
 
+                        {/* Message icon button instead of full button */}
+                        <div className={styles.cardActions}>
                           <button
-                            className={styles.messageButton}
+                            className={styles.iconButton}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleSendMessage(vendor);
                             }}
+                            title="Message Vendor"
                           >
                             <FiMessageSquare />
-                            Message
                           </button>
                         </div>
                       </div>
@@ -437,6 +461,40 @@ function Vendors({ username, role, userId }) {
                               {product.description}
                             </p>
 
+                            {/* Product Images Section */}
+                            {product.images && product.images.length > 0 && (
+                              <div className={styles.productImages}>
+                                <h4 className={styles.detailsHeading}>
+                                  Product Images
+                                </h4>
+                                <div className={styles.imageGallery}>
+                                  {product.images.map((image, index) => (
+                                    <div
+                                      key={index}
+                                      className={styles.imageThumb}
+                                      onClick={(e) =>
+                                        handleShowImage(
+                                          formatImageUrl(image),
+                                          e
+                                        )
+                                      }
+                                    >
+                                      <img
+                                        src={formatImageUrl(image)}
+                                        alt={`${product.name} - image ${
+                                          index + 1
+                                        }`}
+                                      />
+                                      <div className={styles.imageOverlay}>
+                                        <FiImage />
+                                        <span>View</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             <div className={styles.productAttributes}>
                               <div className={styles.attributeItem}>
                                 <span className={styles.attributeLabel}>
@@ -446,7 +504,8 @@ function Vendors({ username, role, userId }) {
                                   {product.dimensions &&
                                   Array.isArray(product.dimensions)
                                     ? product.dimensions.join(" x ")
-                                    : "Not specified"}
+                                    : product.specifications?.size ||
+                                      "Not specified"}
                                 </span>
                               </div>
                               <div className={styles.attributeItem}>
@@ -454,16 +513,17 @@ function Vendors({ username, role, userId }) {
                                   Colors:
                                 </span>
                                 <div className={styles.colorOptions}>
-                                  {product.color_options.map((color) => (
-                                    <span
-                                      key={color}
-                                      className={styles.colorOption}
-                                      style={{
-                                        backgroundColor: color.toLowerCase(),
-                                      }}
-                                      title={color}
-                                    ></span>
-                                  ))}
+                                  {product.color_options &&
+                                    product.color_options.map((color) => (
+                                      <span
+                                        key={color}
+                                        className={styles.colorOption}
+                                        style={{
+                                          backgroundColor: color.toLowerCase(),
+                                        }}
+                                        title={color}
+                                      ></span>
+                                    ))}
                                 </div>
                               </div>
                               <div className={styles.attributeItem}>
@@ -471,7 +531,9 @@ function Vendors({ username, role, userId }) {
                                   Lead Time:
                                 </span>
                                 <span className={styles.attributeValue}>
-                                  {product.lead_time_days} days
+                                  {product.lead_time_days ||
+                                    product.lead_time ||
+                                    "Contact for lead time"}
                                 </span>
                               </div>
                               <div className={styles.attributeItem}>
@@ -479,15 +541,78 @@ function Vendors({ username, role, userId }) {
                                   Minimum Order:
                                 </span>
                                 <span className={styles.attributeValue}>
-                                  {product.minimum_order} units
+                                  {product.minimum_order ||
+                                    product.min_order_quantity ||
+                                    1}{" "}
+                                  units
                                 </span>
+                              </div>
+
+                              {/* Additional Specifications */}
+                              {product.specifications &&
+                                Object.keys(product.specifications).length >
+                                  0 && (
+                                  <>
+                                    <h4 className={styles.detailsHeading}>
+                                      Specifications
+                                    </h4>
+                                    {Object.entries(product.specifications).map(
+                                      ([key, value]) => (
+                                        <div
+                                          key={key}
+                                          className={styles.attributeItem}
+                                        >
+                                          <span
+                                            className={styles.attributeLabel}
+                                          >
+                                            {key.charAt(0).toUpperCase() +
+                                              key.slice(1)}
+                                            :
+                                          </span>
+                                          <span
+                                            className={styles.attributeValue}
+                                          >
+                                            {value}
+                                          </span>
+                                        </div>
+                                      )
+                                    )}
+                                  </>
+                                )}
+
+                              {/* Stock Information */}
+                              <div className={styles.stockInfo}>
+                                <div className={styles.attributeItem}>
+                                  <span className={styles.attributeLabel}>
+                                    Availability:
+                                  </span>
+                                  <span
+                                    className={`${styles.attributeValue} ${
+                                      product.in_stock
+                                        ? styles.inStock
+                                        : styles.outOfStock
+                                    }`}
+                                  >
+                                    {product.in_stock
+                                      ? "In Stock"
+                                      : "Out of Stock"}
+                                  </span>
+                                </div>
+                                {product.in_stock && product.stock_quantity && (
+                                  <div className={styles.attributeItem}>
+                                    <span className={styles.attributeLabel}>
+                                      Stock Quantity:
+                                    </span>
+                                    <span className={styles.attributeValue}>
+                                      {product.stock_quantity}{" "}
+                                      {product.unit || "units"}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
 
-                            <button className={styles.inquireButton}>
-                              <FiInfo />
-                              Inquire About Product
-                            </button>
+                            {/* Removed productActions div with Inquire and Request Quote buttons */}
                           </div>
                         )}
                       </div>
@@ -615,6 +740,24 @@ function Vendors({ username, role, userId }) {
             Close
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Product Image Modal */}
+      <Modal
+        show={showProductImageModal}
+        onHide={() => setShowProductImageModal(false)}
+        size="lg"
+        centered
+        className={styles.imageModal}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Product Image</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className={styles.fullImage}>
+            <img src={selectedImage} alt="Product" />
+          </div>
+        </Modal.Body>
       </Modal>
     </div>
   );
