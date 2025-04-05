@@ -54,6 +54,23 @@ collections.forEach((collectionName) => {
       res.status(500).json({ error: `Error fetching ${collectionName}` });
     }
   });
+
+  // Add POST routes for each collection
+  app.post(`/${collectionName}`, async (req, res) => {
+    try {
+      const db = client.db("Interiora");
+      const result = await db.collection(collectionName).insertOne(req.body);
+      res.status(201).json({
+        success: true,
+        message: `${collectionName} created successfully`,
+        id: req.body.id,
+        data: req.body,
+      });
+    } catch (err) {
+      console.error(`❌ Error creating ${collectionName}:`, err);
+      res.status(500).json({ error: `Error creating ${collectionName}` });
+    }
+  });
 });
 
 // Default route
@@ -94,6 +111,55 @@ app.get("/resources/:resourceType/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Update designer vendor connections
+app.patch("/designers/:designerId/vendor-connections", async (req, res) => {
+  const { designerId } = req.params;
+  const { vendorId } = req.body;
+
+  if (!designerId || !vendorId) {
+    return res
+      .status(400)
+      .json({ error: "Designer ID and Vendor ID are required" });
+  }
+
+  try {
+    const db = client.db("Interiora");
+    const designer = await db
+      .collection("designers")
+      .findOne({ id: designerId });
+
+    if (!designer) {
+      return res.status(404).json({ error: "Designer not found" });
+    }
+
+    // Make sure vendor_connections is an array
+    const vendorConnections = designer.vendor_connections || [];
+
+    // Add the vendor ID if it doesn't already exist
+    if (!vendorConnections.includes(vendorId)) {
+      const result = await db
+        .collection("designers")
+        .updateOne(
+          { id: designerId },
+          { $push: { vendor_connections: vendorId } }
+        );
+
+      return res.json({
+        success: true,
+        message: "Vendor connection added successfully",
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "Vendor already connected",
+      });
+    }
+  } catch (err) {
+    console.error("❌ Error updating vendor connections:", err);
+    res.status(500).json({ error: "Error updating vendor connections" });
   }
 });
 

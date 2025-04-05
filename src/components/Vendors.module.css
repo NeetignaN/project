@@ -678,6 +678,44 @@
     background-color: #5a50c7;
 }
 
+/* Spin Animation */
+.spin-animation {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Active View */
+.activeView {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.activeVendor {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.noVendorSelected {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    text-align: center;
+    color: #666;
+    font-size: 1.1rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
     .contentLayout {

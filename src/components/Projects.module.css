@@ -1,12 +1,12 @@
 .projectCard {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     border-radius: 8px;
     overflow: hidden;
 }
 
 .projectCard:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
 }
 
 .projectCard .card-header {
@@ -16,7 +16,7 @@
 }
 
 .progressWrapper {
-    margin-top: 1.5rem;
+    margin-top: 15px;
 }
 
 .projectStatus {
@@ -25,4 +25,40 @@
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     display: inline-block;
+}
+
+.projectImage {
+    height: 180px;
+    object-fit: cover;
+    transition: opacity 0.3s ease;
+}
+
+.projectCard:hover .projectImage {
+    opacity: 0.9;
+}
+
+.moodboardWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.moodboardImage {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.moodboardImage:hover {
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .projectImage {
+        height: 150px;
+    }
 }

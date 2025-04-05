@@ -11,9 +11,13 @@ import {
   FiChevronUp,
   FiMessageSquare,
   FiPlus,
+  FiUserPlus,
+  FiRefreshCw,
+  FiCheck,
 } from "react-icons/fi";
 
 import api from "../services/api";
+import { Modal, Button } from "react-bootstrap";
 
 function Vendors({ username, role, userId }) {
   const { vendors, setVendors, products, setProducts } = useDesignerData();
@@ -32,6 +36,9 @@ function Vendors({ username, role, userId }) {
     rating: 4.0,
   });
   const [materialInput, setMaterialInput] = useState("");
+  const [allVendors, setAllVendors] = useState([]);
+  const [addingVendor, setAddingVendor] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   // Fetch vendors and products data only if context data is empty
@@ -54,6 +61,10 @@ function Vendors({ username, role, userId }) {
             setProducts(allProducts);
           }
         }
+
+        // Fetch all available vendors for the add vendor modal
+        const allVendorsData = await api.getAllVendors();
+        setAllVendors(allVendorsData);
       } catch (error) {
         console.error("Error fetching data from API:", error);
       } finally {
@@ -62,7 +73,15 @@ function Vendors({ username, role, userId }) {
     };
 
     fetchDesignerVendors();
-  }, [userId, role, vendors, products, setVendors, setProducts]);
+  }, [
+    userId,
+    role,
+    vendors.length,
+    products.length,
+    setVendors,
+    setProducts,
+    refreshing,
+  ]);
 
   // Filter vendors based on search query
   const filteredVendors = vendors.filter(
@@ -163,6 +182,40 @@ function Vendors({ username, role, userId }) {
     });
   };
 
+  // Get vendors that aren't connected to this designer
+  const getAvailableVendors = () => {
+    const connectedVendorIds = vendors.map((vendor) => vendor.id);
+    return allVendors.filter(
+      (vendor) => !connectedVendorIds.includes(vendor.id)
+    );
+  };
+
+  // Add a vendor connection
+  const addVendorConnection = async (vendorId) => {
+    setAddingVendor(true);
+    try {
+      // Call the API to update the vendor connection
+      const response = await api.addVendorConnection(userId, vendorId);
+
+      if (response.success) {
+        // Find the vendor from allVendors
+        const vendorToAdd = allVendors.find((v) => v.id === vendorId);
+
+        if (vendorToAdd) {
+          // Add to local state
+          setVendors([...vendors, vendorToAdd]);
+        }
+
+        // Refresh the data
+        setRefreshing((prev) => !prev);
+      }
+    } catch (error) {
+      console.error("Error adding vendor connection:", error);
+    } finally {
+      setAddingVendor(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Vendors</h1>
@@ -184,7 +237,7 @@ function Vendors({ username, role, userId }) {
           onClick={() => setShowAddVendorModal(true)}
         >
           <FiPlus />
-          Add New Vendor
+          Add Vendor
         </button>
       </div>
 
@@ -198,76 +251,21 @@ function Vendors({ username, role, userId }) {
 
             {filteredVendors.length === 0 ? (
               <div className={styles.noResults}>
-                <p>No vendors found matching your search criteria.</p>
+                <p>No vendors match your search or you have no vendors.</p>
+                <button
+                  className={styles.addVendorButton}
+                  onClick={() => setShowAddVendorModal(true)}
+                >
+                  <FiPlus />
+                  Add a Vendor
+                </button>
               </div>
             ) : (
-              <div className={styles.vendorsGrid}>
-                {filteredVendors.map((vendor) => (
-                  <div
-                    key={vendor.id}
-                    className={`${styles.vendorCard} ${
-                      selectedVendor?.id === vendor.id
-                        ? styles.selectedVendor
-                        : ""
-                    }`}
-                  >
-                    <div
-                      className={styles.vendorCardContent}
-                      onClick={() => handleVendorSelect(vendor)}
-                    >
-                      <div className={styles.vendorAvatar}>
-                        {vendor.avatar ? (
-                          <img src={vendor.avatar} alt={vendor.name} />
-                        ) : (
-                          <div className={styles.avatarPlaceholder}>
-                            {vendor.name.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <div className={styles.vendorInfo}>
-                        <h3>{vendor.name}</h3>
-                        <p>Contact: {vendor.contact}</p>
-                        <div className={styles.materialTags}>
-                          {vendor.materials.map((material, index) => (
-                            <span key={index} className={styles.materialTag}>
-                              {material}
-                            </span>
-                          ))}
-                        </div>
-                        <div className={styles.vendorStats}>
-                          <span className={styles.leadTime}>
-                            Lead time: {vendor.lead_time_days} days
-                          </span>
-                          <span className={styles.rating}>
-                            Rating: {vendor.rating}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      className={styles.messageButton}
-                      onClick={() => handleSendMessage(vendor)}
-                      title={`Send message to ${vendor.name}`}
-                    >
-                      <FiMessageSquare />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Products Section */}
-          {selectedVendor && (
-            <div className={styles.productsSection}>
-              <div className={styles.productsSectionHeader}>
-                <h2 className={styles.sectionTitle}>
-                  Products from {selectedVendor.name}
-                </h2>
+              <>
                 <div className={styles.viewToggle}>
                   <button
                     className={`${styles.viewToggleButton} ${
-                      viewMode === "grid" ? styles.active : ""
+                      viewMode === "grid" ? styles.activeView : ""
                     }`}
                     onClick={() => setViewMode("grid")}
                   >
@@ -275,87 +273,163 @@ function Vendors({ username, role, userId }) {
                   </button>
                   <button
                     className={`${styles.viewToggleButton} ${
-                      viewMode === "list" ? styles.active : ""
+                      viewMode === "list" ? styles.activeView : ""
                     }`}
                     onClick={() => setViewMode("list")}
                   >
                     <FiList />
                   </button>
                 </div>
-              </div>
 
-              {vendorProducts.length === 0 ? (
-                <div className={styles.noResults}>
-                  <p>No products available from this vendor.</p>
-                </div>
-              ) : (
                 <div
                   className={
                     viewMode === "grid"
-                      ? styles.productsGrid
-                      : styles.productsList
+                      ? styles.vendorsGrid
+                      : styles.vendorsList
                   }
                 >
-                  {vendorProducts.map((product) => (
+                  {filteredVendors.map((vendor) => (
                     <div
-                      key={product.id}
-                      className={styles.productCard}
-                      onClick={() => toggleProductDetails(product.id)}
+                      key={vendor.id}
+                      className={`${styles.vendorCard} ${
+                        selectedVendor?.id === vendor.id
+                          ? styles.activeVendor
+                          : ""
+                      }`}
+                      onClick={() => handleVendorSelect(vendor)}
                     >
-                      <div className={styles.productImageContainer}>
-                        {product.images && product.images.length > 0 ? (
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className={styles.productImage}
-                          />
-                        ) : (
-                          <div className={styles.noImage}>
-                            <FiInfo />
-                            <span>No image</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className={styles.productInfo}>
-                        <h3 className={styles.productName}>{product.name}</h3>
-                        <p className={styles.productPrice}>
-                          ${product.price} per {product.unit}
-                        </p>
-                        <p className={styles.productCategory}>
-                          Category: {product.category}
-                        </p>
-
-                        <div className={styles.productStockInfo}>
-                          <span
-                            className={`${styles.stockIndicator} ${
-                              product.in_stock
-                                ? styles.inStock
-                                : styles.outOfStock
-                            }`}
-                          >
-                            {product.in_stock ? "In Stock" : "Out of Stock"}
-                          </span>
-                          {product.in_stock && (
-                            <span className={styles.stockQuantity}>
-                              {product.stock_quantity} available
-                            </span>
+                      <div className={styles.vendorHeader}>
+                        <div className={styles.vendorAvatar}>
+                          {vendor.avatar ? (
+                            <img
+                              src={vendor.avatar}
+                              alt={vendor.name}
+                              className={styles.avatarImg}
+                            />
+                          ) : (
+                            <div className={styles.avatarInitials}>
+                              {vendor.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </div>
                           )}
                         </div>
+                        <div className={styles.vendorInfo}>
+                          <h3 className={styles.vendorName}>{vendor.name}</h3>
+                          <p className={styles.vendorContact}>
+                            Contact: {vendor.contact}
+                          </p>
+                        </div>
+                      </div>
 
-                        <button className={styles.detailsToggle}>
-                          {activeProductId === product.id ? (
-                            <>
-                              <span>Hide Details</span>
-                              <FiChevronUp />
-                            </>
-                          ) : (
-                            <>
-                              <span>Show Details</span>
-                              <FiChevronDown />
-                            </>
-                          )}
+                      <div className={styles.vendorDetails}>
+                        <div className={styles.vendorMaterials}>
+                          <span className={styles.materialsLabel}>
+                            Materials:
+                          </span>
+                          <div className={styles.materialsTags}>
+                            {vendor.materials.map((material) => (
+                              <span
+                                key={material}
+                                className={styles.materialTag}
+                              >
+                                {material}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className={styles.vendorStats}>
+                          <div className={styles.statItem}>
+                            <span className={styles.statLabel}>Lead time:</span>
+                            <span className={styles.statValue}>
+                              {vendor.lead_time_days} days
+                            </span>
+                          </div>
+                          <div className={styles.statItem}>
+                            <span className={styles.statLabel}>Rating:</span>
+                            <div className={styles.ratingStars}>
+                              {[...Array(5)].map((_, i) => (
+                                <span
+                                  key={i}
+                                  className={`${styles.star} ${
+                                    i < Math.floor(vendor.rating)
+                                      ? styles.filled
+                                      : ""
+                                  }`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                              <span className={styles.ratingValue}>
+                                ({vendor.rating})
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          className={styles.messageButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendMessage(vendor);
+                          }}
+                        >
+                          <FiMessageSquare />
+                          Message
                         </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Vendor Details / Products */}
+          <div className={styles.vendorDetails}>
+            {selectedVendor ? (
+              <>
+                <h2 className={styles.sectionTitle}>
+                  Products by {selectedVendor.name}
+                </h2>
+
+                {vendorProducts.length === 0 ? (
+                  <div className={styles.noProducts}>
+                    <p>No products available from this vendor.</p>
+                  </div>
+                ) : (
+                  <div className={styles.productsList}>
+                    {vendorProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className={styles.productCard}
+                        onClick={() => toggleProductDetails(product.id)}
+                      >
+                        <div className={styles.productHeader}>
+                          <h3 className={styles.productName}>{product.name}</h3>
+                          <div className={styles.productPrice}>
+                            ${product.price.toFixed(2)}
+                          </div>
+                        </div>
+
+                        <div className={styles.productCategory}>
+                          <span className={styles.categoryLabel}>
+                            Category:
+                          </span>
+                          <span className={styles.categoryValue}>
+                            {product.category}
+                          </span>
+                        </div>
+
+                        <div className={styles.productExpand}>
+                          {activeProductId === product.id ? (
+                            <FiChevronUp />
+                          ) : (
+                            <FiChevronDown />
+                          )}
+                        </div>
 
                         {activeProductId === product.id && (
                           <div className={styles.productDetails}>
@@ -363,192 +437,182 @@ function Vendors({ username, role, userId }) {
                               {product.description}
                             </p>
 
-                            {product.specifications && (
-                              <div className={styles.productSpecs}>
-                                <h4>Specifications:</h4>
-                                <ul>
-                                  {Object.entries(product.specifications).map(
-                                    ([key, value]) => (
-                                      <li key={key}>
-                                        <strong>{key}:</strong> {value}
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
+                            <div className={styles.productAttributes}>
+                              <div className={styles.attributeItem}>
+                                <span className={styles.attributeLabel}>
+                                  Dimensions:
+                                </span>
+                                <span className={styles.attributeValue}>
+                                  {product.dimensions.join(" x ")}
+                                </span>
                               </div>
-                            )}
-
-                            <div className={styles.orderInfo}>
-                              <p>
-                                <strong>Lead Time:</strong> {product.lead_time}
-                              </p>
-                              <p>
-                                <strong>Minimum Order:</strong>{" "}
-                                {product.min_order_quantity} {product.unit}(s)
-                              </p>
-                            </div>
-
-                            {product.images && product.images.length > 1 && (
-                              <div className={styles.additionalImages}>
-                                <h4>Additional Images:</h4>
-                                <div className={styles.imageGallery}>
-                                  {product.images
-                                    .slice(1)
-                                    .map((image, index) => (
-                                      <img
-                                        key={index}
-                                        src={image}
-                                        alt={`${product.name} - Image ${
-                                          index + 2
-                                        }`}
-                                        className={styles.galleryImage}
-                                      />
-                                    ))}
+                              <div className={styles.attributeItem}>
+                                <span className={styles.attributeLabel}>
+                                  Colors:
+                                </span>
+                                <div className={styles.colorOptions}>
+                                  {product.color_options.map((color) => (
+                                    <span
+                                      key={color}
+                                      className={styles.colorOption}
+                                      style={{
+                                        backgroundColor: color.toLowerCase(),
+                                      }}
+                                      title={color}
+                                    ></span>
+                                  ))}
                                 </div>
                               </div>
-                            )}
+                              <div className={styles.attributeItem}>
+                                <span className={styles.attributeLabel}>
+                                  Lead Time:
+                                </span>
+                                <span className={styles.attributeValue}>
+                                  {product.lead_time_days} days
+                                </span>
+                              </div>
+                              <div className={styles.attributeItem}>
+                                <span className={styles.attributeLabel}>
+                                  Minimum Order:
+                                </span>
+                                <span className={styles.attributeValue}>
+                                  {product.minimum_order} units
+                                </span>
+                              </div>
+                            </div>
+
+                            <button className={styles.inquireButton}>
+                              <FiInfo />
+                              Inquire About Product
+                            </button>
                           </div>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {!selectedVendor && vendors.length > 0 && (
-            <div className={styles.vendorSelectPrompt}>
-              <div className={styles.promptCard}>
-                <FiInfo className={styles.promptIcon} />
-                <h3>Select a Vendor</h3>
-                <p>Choose a vendor from the list to view their products.</p>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className={styles.noVendorSelected}>
+                <p>Select a vendor to view their products</p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
       {/* Add Vendor Modal */}
-      {showAddVendorModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <h2>Add New Vendor</h2>
-            <form onSubmit={handleAddVendor}>
-              <div className={styles.formGroup}>
-                <label htmlFor="name">Vendor Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={newVendorData.name}
-                  onChange={handleVendorInputChange}
-                  required
-                />
-              </div>
+      <Modal
+        show={showAddVendorModal}
+        onHide={() => setShowAddVendorModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Add Vendor</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="mb-4">
+            <h5>Available Vendors</h5>
+            <p className="text-muted">
+              Select vendors to add to your connections
+            </p>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="contact">Contact Person</label>
-                <input
-                  type="text"
-                  id="contact"
-                  name="contact"
-                  value={newVendorData.contact}
-                  onChange={handleVendorInputChange}
-                  required
-                />
-              </div>
+            <Button
+              variant="outline-secondary"
+              className="mb-3"
+              onClick={() => setRefreshing((prev) => !prev)}
+              disabled={refreshing}
+            >
+              <FiRefreshCw className={refreshing ? "spin-animation" : ""} />
+              Refresh List
+            </Button>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={newVendorData.email}
-                  onChange={handleVendorInputChange}
-                  required
-                />
+            {getAvailableVendors().length === 0 ? (
+              <div className="alert alert-info">
+                No new vendors available to connect with. All vendors are
+                already in your connections.
               </div>
+            ) : (
+              <div className="row">
+                {getAvailableVendors().map((vendor) => (
+                  <div key={vendor.id} className="col-md-6 mb-3">
+                    <div className="card h-100">
+                      <div className="card-body">
+                        <div className="d-flex">
+                          <div
+                            className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                            style={{ width: "48px", height: "48px" }}
+                          >
+                            {vendor.avatar ? (
+                              <img
+                                src={vendor.avatar}
+                                alt={vendor.name}
+                                className="rounded-circle w-100 h-100"
+                                style={{ objectFit: "cover" }}
+                              />
+                            ) : (
+                              vendor.name.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div>
+                            <h5 className="mb-1">{vendor.name}</h5>
+                            <p className="text-muted mb-0">{vendor.contact}</p>
+                          </div>
+                        </div>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="materials">Materials</label>
-                <div className={styles.materialsInput}>
-                  <input
-                    type="text"
-                    id="materials"
-                    value={materialInput}
-                    onChange={(e) => setMaterialInput(e.target.value)}
-                    placeholder="Enter material and press Add"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddMaterial}
-                    className={styles.addMaterialButton}
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className={styles.materialTags}>
-                  {newVendorData.materials.map((material, index) => (
-                    <span key={index} className={styles.materialTag}>
-                      {material}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMaterial(material)}
-                        className={styles.removeMaterial}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
+                        <div className="mt-3">
+                          <div className="d-flex flex-wrap mb-2">
+                            <span className="fw-bold me-2">Materials:</span>
+                            {vendor.materials.map((material) => (
+                              <span
+                                key={material}
+                                className="badge bg-light text-dark me-1 mb-1"
+                              >
+                                {material}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="d-flex align-items-center">
+                            <span className="me-2">Rating:</span>
+                            <div className="text-warning">
+                              {[...Array(5)].map((_, i) => (
+                                <span key={i}>
+                                  {i < Math.floor(vendor.rating) ? "★" : "☆"}
+                                </span>
+                              ))}
+                            </div>
+                            <span className="ms-1">({vendor.rating})</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="card-footer bg-white border-top-0">
+                        <Button
+                          variant="primary"
+                          className="w-100"
+                          onClick={() => addVendorConnection(vendor.id)}
+                          disabled={addingVendor}
+                        >
+                          <FiUserPlus className="me-2" />
+                          Add to My Vendors
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="lead_time_days">Lead Time (days)</label>
-                <input
-                  type="number"
-                  id="lead_time_days"
-                  name="lead_time_days"
-                  min="1"
-                  value={newVendorData.lead_time_days}
-                  onChange={handleVendorInputChange}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="rating">Rating (1-5)</label>
-                <input
-                  type="number"
-                  id="rating"
-                  name="rating"
-                  min="1"
-                  max="5"
-                  step="0.1"
-                  value={newVendorData.rating}
-                  onChange={handleVendorInputChange}
-                  required
-                />
-              </div>
-
-              <div className={styles.modalActions}>
-                <button
-                  type="button"
-                  onClick={() => setShowAddVendorModal(false)}
-                  className={styles.cancelButton}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className={styles.submitButton}>
-                  Add Vendor
-                </button>
-              </div>
-            </form>
+            )}
           </div>
-        </div>
-      )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowAddVendorModal(false)}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

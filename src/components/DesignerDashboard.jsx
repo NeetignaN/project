@@ -226,12 +226,12 @@ function DesignerDashboard({ userDetails, userId, role }) {
       <section className="mt-4 mb-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="h4 mb-0">Active Projects</h2>
-          <a
-            href="#"
+          <Link
+            to="/designer/projects"
             className="btn btn-sm btn-outline-primary d-flex align-items-center"
           >
             View All Projects <FiArrowRight className="ms-2" />
-          </a>
+          </Link>
         </div>
         <div className="row g-4">
           {activeProjects.length === 0 ? (
@@ -315,12 +315,12 @@ function DesignerDashboard({ userDetails, userId, role }) {
       <section className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="h4 mb-0">Recent Clients</h2>
-          <a
-            href="#"
+          <Link
+            to="/designer/clients"
             className="btn btn-sm btn-outline-primary d-flex align-items-center"
           >
             View All Clients <FiArrowRight className="ms-2" />
-          </a>
+          </Link>
         </div>
 
         <div className="row g-4">

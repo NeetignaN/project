@@ -207,6 +207,101 @@ const api = {
       throw err;
     }
   },
+
+  // Add a new project
+  addProject: async (projectData) => {
+    try {
+      // Generate a unique ID if not provided
+      if (!projectData.id) {
+        projectData.id = `project_${Date.now()}`;
+      }
+
+      const response = await fetch(`${BASE_URL}/projects`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(projectData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add project");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error adding project:", error);
+      throw error;
+    }
+  },
+
+  // Add a new client
+  addClient: async (clientData) => {
+    try {
+      // Generate a unique ID if not provided
+      if (!clientData.id) {
+        clientData.id = `client_${Date.now()}`;
+      }
+
+      const response = await fetch(`${BASE_URL}/clients`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(clientData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add client");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error adding client:", error);
+      throw error;
+    }
+  },
+
+  // Update designer vendor connections
+  addVendorConnection: async (designerId, vendorId) => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/designers/${designerId}/vendor-connections`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ vendorId }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update vendor connection");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating vendor connection:", error);
+      throw error;
+    }
+  },
+
+  // Get all available vendors (for the add vendor modal)
+  getAllVendors: async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/vendors`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch vendors");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      throw error;
+    }
+  },
 };
 
 export default api;
