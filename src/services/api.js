@@ -184,6 +184,7 @@ const api = {
           result.clients = clientsData;
           result.vendors = vendorsData;
           result.schedules = schedulesData;
+          console.log(result);
           break;
         }
 

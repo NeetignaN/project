@@ -10,7 +10,7 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import styles from "./DesignerLayout.module.css";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png"; // Fixed case sensitivity
 
 function AdminLayout({ onLogout, username = "Admin" }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -62,7 +62,7 @@ function AdminLayout({ onLogout, username = "Admin" }) {
           >
             <img src={logo} alt="Logo" className={styles.logoButton} />
           </button>
-          <span className={styles.logo}>Interiora Admin</span>
+          <span className={styles.logo}>Interiora</span>
         </div>
 
         {/* Welcome message and avatar */}

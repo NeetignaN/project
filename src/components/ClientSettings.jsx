@@ -9,7 +9,6 @@ import {
   FiHome,
   FiCreditCard,
   FiLock,
-  FiBell,
 } from "react-icons/fi";
 
 function ClientSettings({ userId, role }) {
@@ -24,13 +23,6 @@ function ClientSettings({ userId, role }) {
     preferredContact: "email",
   });
 
-  const [notifications, setNotifications] = useState({
-    emailUpdates: true,
-    projectUpdates: true,
-    meetingReminders: true,
-    marketingEmails: false,
-  });
-
   // Handle form submission
   const handleProfileSubmit = (e) => {
     e.preventDefault();
@@ -40,17 +32,6 @@ function ClientSettings({ userId, role }) {
     setTimeout(() => {
       setLoading(false);
       alert("Profile updated successfully!");
-    }, 1000);
-  };
-
-  const handleNotificationSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      alert("Notification preferences updated successfully!");
     }, 1000);
   };
 
@@ -91,14 +72,6 @@ function ClientSettings({ userId, role }) {
                 onClick={() => setActiveTab("password")}
               >
                 <FiLock className="me-2" /> Password
-              </button>
-              <button
-                className={`list-group-item list-group-item-action d-flex align-items-center ${
-                  activeTab === "notifications" ? "active" : ""
-                }`}
-                onClick={() => setActiveTab("notifications")}
-              >
-                <FiBell className="me-2" /> Notifications
               </button>
               <button
                 className={`list-group-item list-group-item-action d-flex align-items-center ${
@@ -342,129 +315,6 @@ function ClientSettings({ userId, role }) {
                         disabled={loading}
                       >
                         {loading ? "Updating..." : "Update Password"}
-                      </button>
-                    </div>
-                  </form>
-                </>
-              )}
-
-              {/* Notification Settings */}
-              {activeTab === "notifications" && (
-                <>
-                  <h3 className="h5 mb-4">Notification Preferences</h3>
-                  <form onSubmit={handleNotificationSubmit}>
-                    <div className="mb-3">
-                      <div className="form-check form-switch">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="emailUpdates"
-                          checked={notifications.emailUpdates}
-                          onChange={() =>
-                            setNotifications({
-                              ...notifications,
-                              emailUpdates: !notifications.emailUpdates,
-                            })
-                          }
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="emailUpdates"
-                        >
-                          Email Updates
-                        </label>
-                        <div className="form-text">
-                          Receive project updates and status changes via email.
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <div className="form-check form-switch">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="projectUpdates"
-                          checked={notifications.projectUpdates}
-                          onChange={() =>
-                            setNotifications({
-                              ...notifications,
-                              projectUpdates: !notifications.projectUpdates,
-                            })
-                          }
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="projectUpdates"
-                        >
-                          Project Updates
-                        </label>
-                        <div className="form-text">
-                          Get notified when there are updates to your projects.
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <div className="form-check form-switch">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="meetingReminders"
-                          checked={notifications.meetingReminders}
-                          onChange={() =>
-                            setNotifications({
-                              ...notifications,
-                              meetingReminders: !notifications.meetingReminders,
-                            })
-                          }
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="meetingReminders"
-                        >
-                          Meeting Reminders
-                        </label>
-                        <div className="form-text">
-                          Receive reminders about upcoming meetings and
-                          appointments.
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="form-check form-switch">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="marketingEmails"
-                          checked={notifications.marketingEmails}
-                          onChange={() =>
-                            setNotifications({
-                              ...notifications,
-                              marketingEmails: !notifications.marketingEmails,
-                            })
-                          }
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="marketingEmails"
-                        >
-                          Marketing Emails
-                        </label>
-                        <div className="form-text">
-                          Receive promotional offers and newsletters.
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-                      <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={loading}
-                      >
-                        {loading ? "Saving..." : "Save Preferences"}
                       </button>
                     </div>
                   </form>

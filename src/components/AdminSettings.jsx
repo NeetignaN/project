@@ -4,14 +4,20 @@ import {
   FiLock,
   FiMail,
   FiGlobe,
-  FiUsers,
-  FiBell,
+  FiUser,
+  FiPhone,
 } from "react-icons/fi";
 import styles from "./DesignerDashboard.module.css";
 
 function AdminSettings({ userId, role }) {
   const [activeTab, setActiveTab] = useState("general");
   const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState({
+    name: "Admin User",
+    email: "admin@interiora.com",
+    phone: "+1 (555) 987-6543",
+    jobTitle: "System Administrator",
+  });
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -42,30 +48,21 @@ function AdminSettings({ userId, role }) {
               </button>
               <button
                 className={`list-group-item list-group-item-action d-flex align-items-center gap-2 ${
-                  activeTab === "account" ? "active" : ""
+                  activeTab === "profile" ? "active" : ""
                 }`}
-                onClick={() => setActiveTab("account")}
+                onClick={() => setActiveTab("profile")}
+              >
+                <FiUser />
+                Profile
+              </button>
+              <button
+                className={`list-group-item list-group-item-action d-flex align-items-center gap-2 ${
+                  activeTab === "password" ? "active" : ""
+                }`}
+                onClick={() => setActiveTab("password")}
               >
                 <FiLock />
-                Account Security
-              </button>
-              <button
-                className={`list-group-item list-group-item-action d-flex align-items-center gap-2 ${
-                  activeTab === "notifications" ? "active" : ""
-                }`}
-                onClick={() => setActiveTab("notifications")}
-              >
-                <FiBell />
-                Notifications
-              </button>
-              <button
-                className={`list-group-item list-group-item-action d-flex align-items-center gap-2 ${
-                  activeTab === "users" ? "active" : ""
-                }`}
-                onClick={() => setActiveTab("users")}
-              >
-                <FiUsers />
-                User Management
+                Password
               </button>
             </div>
           </div>
@@ -152,9 +149,116 @@ function AdminSettings({ userId, role }) {
                 </form>
               )}
 
-              {activeTab === "account" && (
+              {activeTab === "profile" && (
                 <form onSubmit={handleSave}>
-                  <h5 className="mb-4">Account Security</h5>
+                  <h5 className="mb-4">Profile Information</h5>
+
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <label htmlFor="fullName" className="form-label">
+                        Full Name
+                      </label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <FiUser />
+                        </span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="fullName"
+                          value={profile.name}
+                          onChange={(e) =>
+                            setProfile({ ...profile, name: e.target.value })
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="email" className="form-label">
+                        Email
+                      </label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <FiMail />
+                        </span>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="email"
+                          value={profile.email}
+                          onChange={(e) =>
+                            setProfile({ ...profile, email: e.target.value })
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <label htmlFor="phone" className="form-label">
+                        Phone
+                      </label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <FiPhone />
+                        </span>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          id="phone"
+                          value={profile.phone}
+                          onChange={(e) =>
+                            setProfile({ ...profile, phone: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="jobTitle" className="form-label">
+                        Job Title
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="jobTitle"
+                        value={profile.jobTitle}
+                        onChange={(e) =>
+                          setProfile({ ...profile, jobTitle: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary d-flex align-items-center gap-2"
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FiSave />
+                        Save Profile
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {activeTab === "password" && (
+                <form onSubmit={handleSave}>
+                  <h5 className="mb-4">Change Password</h5>
 
                   <div className="mb-3">
                     <label htmlFor="currentPassword" className="form-label">
@@ -164,6 +268,7 @@ function AdminSettings({ userId, role }) {
                       type="password"
                       className="form-control"
                       id="currentPassword"
+                      required
                     />
                   </div>
 
@@ -175,10 +280,15 @@ function AdminSettings({ userId, role }) {
                       type="password"
                       className="form-control"
                       id="newPassword"
+                      required
                     />
+                    <div className="form-text">
+                      Password must be at least 8 characters and include a mix
+                      of letters, numbers, and symbols.
+                    </div>
                   </div>
 
-                  <div className="mb-3">
+                  <div className="mb-4">
                     <label htmlFor="confirmPassword" className="form-label">
                       Confirm New Password
                     </label>
@@ -186,19 +296,8 @@ function AdminSettings({ userId, role }) {
                       type="password"
                       className="form-control"
                       id="confirmPassword"
+                      required
                     />
-                  </div>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="twoFactor"
-                      defaultChecked
-                    />
-                    <label className="form-check-label" htmlFor="twoFactor">
-                      Enable Two-Factor Authentication
-                    </label>
                   </div>
 
                   <button
@@ -218,198 +317,11 @@ function AdminSettings({ userId, role }) {
                     ) : (
                       <>
                         <FiSave />
-                        Update Security Settings
+                        Update Password
                       </>
                     )}
                   </button>
                 </form>
-              )}
-
-              {activeTab === "notifications" && (
-                <form onSubmit={handleSave}>
-                  <h5 className="mb-4">Notification Settings</h5>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="emailNotifications"
-                      defaultChecked
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor="emailNotifications"
-                    >
-                      Email Notifications
-                    </label>
-                  </div>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="systemNotifications"
-                      defaultChecked
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor="systemNotifications"
-                    >
-                      System Notifications
-                    </label>
-                  </div>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="userNotifications"
-                      defaultChecked
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor="userNotifications"
-                    >
-                      User Activity Notifications
-                    </label>
-                  </div>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="projectNotifications"
-                      defaultChecked
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor="projectNotifications"
-                    >
-                      Project Update Notifications
-                    </label>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="btn btn-primary d-flex align-items-center gap-2"
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm"
-                          role="status"
-                          aria-hidden="true"
-                        ></span>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <FiSave />
-                        Save Notification Preferences
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-
-              {activeTab === "users" && (
-                <div>
-                  <h5 className="mb-4">User Management Settings</h5>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="allowRegistration"
-                      defaultChecked
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor="allowRegistration"
-                    >
-                      Allow User Registration
-                    </label>
-                  </div>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="adminApproval"
-                    />
-                    <label className="form-check-label" htmlFor="adminApproval">
-                      Require Admin Approval for New Accounts
-                    </label>
-                  </div>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="emailVerification"
-                      defaultChecked
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor="emailVerification"
-                    >
-                      Require Email Verification
-                    </label>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="accountLockout" className="form-label">
-                      Account Lockout Threshold (Failed Login Attempts)
-                    </label>
-                    <select className="form-select" id="accountLockout">
-                      <option value="3">3 attempts</option>
-                      <option value="5" selected>
-                        5 attempts
-                      </option>
-                      <option value="10">10 attempts</option>
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="passwordPolicy" className="form-label">
-                      Password Policy
-                    </label>
-                    <select className="form-select" id="passwordPolicy">
-                      <option value="basic">
-                        Basic (minimum 8 characters)
-                      </option>
-                      <option value="medium" selected>
-                        Medium (8+ chars, uppercase, lowercase, number)
-                      </option>
-                      <option value="strong">
-                        Strong (8+ chars, uppercase, lowercase, number, special)
-                      </option>
-                    </select>
-                  </div>
-
-                  <button
-                    className="btn btn-primary d-flex align-items-center gap-2"
-                    onClick={handleSave}
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm"
-                          role="status"
-                          aria-hidden="true"
-                        ></span>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <FiSave />
-                        Save User Settings
-                      </>
-                    )}
-                  </button>
-                </div>
               )}
             </div>
           </div>

@@ -119,7 +119,7 @@ function AdminUsers({ userId, role }) {
       const processedVendors = users.vendors.map((vendor) => ({
         ...vendor,
         userType: "vendor",
-        displayName: vendor.company_name || "Unknown Vendor",
+        displayName: vendor.contact || "Unknown Vendor",
         email: vendor.email || "N/A",
         phone: vendor.phone || "N/A",
         address: vendor.address || "N/A",
