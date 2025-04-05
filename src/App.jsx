@@ -1,6 +1,7 @@
 import { DesignerDataProvider } from "./contexts/DesignerDataContext.jsx";
 import { ClientDataProvider } from "./contexts/ClientDataContext.jsx";
 import { AdminDataProvider } from "./contexts/AdminDataContext.jsx";
+import { VendorDataProvider } from "./contexts/VendorDataContext.jsx";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -15,21 +16,27 @@ import LandingPage from "./components/LandingPage.jsx";
 import DesignerLayout from "./components/DesignerLayout.jsx";
 import ClientLayout from "./components/ClientLayout.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
+import VendorLayout from "./components/VendorLayout.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import ClientDashboard from "./components/ClientDashboard.jsx";
 import AdminDashboard from "./components/AdminDashboard.jsx";
+import VendorDashboard from "./components/VendorDashboard.jsx";
 import AdminUsers from "./components/AdminUsers.jsx";
 import AdminProjects from "./components/AdminProjects.jsx";
 import AdminSettings from "./components/AdminSettings.jsx";
 import ClientSettings from "./components/ClientSettings.jsx";
+import VendorSettings from "./components/VendorSettings.jsx";
 import Clients from "./components/Clients.jsx";
 import Projects from "./components/Projects.jsx";
 import ClientProjects from "./components/ClientProjects.jsx";
 import Messages from "./components/Messages.jsx";
+import VendorMessages from "./components/VendorMessages.jsx";
 import ClientMessages from "./components/ClientMessages.jsx";
 import Schedules from "./components/Schedules.jsx";
+import VendorSchedules from "./components/VendorSchedules.jsx";
 import ClientSchedules from "./components/ClientSchedules.jsx";
 import Vendors from "./components/Vendors.jsx";
+import VendorProducts from "./components/VendorProducts.jsx";
 import authService from "./services/authService.js";
 
 // Main App Component
@@ -261,14 +268,64 @@ function AppContent() {
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
+      {/* Vendor Routes */}
       <Route
-        path="/vendor/dashboard"
+        path="/vendor/*"
         element={
           <ProtectedRoute allowedRoles={["vendor"]}>
-            <Dashboard username={username} role={userRole} userId={userId} />
+            <VendorDataProvider>
+              <VendorLayout onLogout={handleLogout} username={username} />
+            </VendorDataProvider>
           </ProtectedRoute>
         }
-      />
+      >
+        <Route
+          path="dashboard"
+          element={
+            <VendorDashboard
+              username={username}
+              role={userRole}
+              userId={userId}
+              userDetails={userDetails}
+            />
+          }
+        />
+        <Route
+          path="products"
+          element={
+            <VendorProducts
+              username={username}
+              role={userRole}
+              userId={userId}
+            />
+          }
+        />
+        <Route
+          path="messages"
+          element={
+            <VendorMessages
+              username={username}
+              role={userRole}
+              userId={userId}
+            />
+          }
+        />
+        <Route
+          path="schedules"
+          element={
+            <VendorSchedules
+              username={username}
+              role={userRole}
+              userId={userId}
+            />
+          }
+        />
+        <Route
+          path="settings"
+          element={<VendorSettings userId={userId} role={userRole} />}
+        />
+        <Route path="*" element={<Navigate to="/vendor/dashboard" replace />} />
+      </Route>
 
       {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" />} />
