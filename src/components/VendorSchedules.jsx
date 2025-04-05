@@ -41,6 +41,35 @@ function VendorSchedules({ username, role, userId }) {
     vendor_id: userId,
   });
 
+  // Get current period string for the header
+  const getCurrentPeriodString = () => {
+    if (view === "month") {
+      return currentDate.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+    } else if (view === "week") {
+      const days = getDaysInWeek();
+      return `${formatDate(days[0])} - ${formatDate(days[days.length - 1])}`;
+    } else if (view === "day") {
+      return currentDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+  };
+
+  // Format a date as just the time
+  const formatTimeOnly = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   // Fetch schedules on component mount
   useEffect(() => {
     const fetchVendorSchedules = async () => {
@@ -265,7 +294,7 @@ function VendorSchedules({ username, role, userId }) {
   };
 
   // Navigate to previous month/week/day
-  const goToPreviousPeriod = () => {
+  const goToPreviousMonth = () => {
     if (view === "month") {
       setCurrentDate(
         new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
@@ -282,7 +311,7 @@ function VendorSchedules({ username, role, userId }) {
   };
 
   // Navigate to next month/week/day
-  const goToNextPeriod = () => {
+  const goToNextMonth = () => {
     if (view === "month") {
       setCurrentDate(
         new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
@@ -298,20 +327,36 @@ function VendorSchedules({ username, role, userId }) {
     }
   };
 
-  // Get current period string (month, week, or day)
-  const getCurrentPeriodString = () => {
-    if (view === "month") {
-      return formatMonthAndYear(currentDate);
-    } else if (view === "week") {
-      const weekStart = new Date(currentDate);
-      const day = currentDate.getDay();
-      weekStart.setDate(currentDate.getDate() - day);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
-    } else if (view === "day") {
-      return formatDate(currentDate);
+  // Go to today
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Get days of the current week
+  const getDaysInWeek = () => {
+    const date = new Date(currentDate);
+    const day = date.getDay(); // 0 for Sunday, 1 for Monday, etc.
+
+    // Set to the beginning of the week (Sunday)
+    date.setDate(date.getDate() - day);
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const newDate = new Date(date);
+      days.push(newDate);
+      date.setDate(date.getDate() + 1);
     }
+
+    return days;
+  };
+
+  // Format date for week/day view headers
+  const formatShortDate = (date) => {
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "numeric",
+      day: "numeric",
+    });
   };
 
   // Get events for a specific day
@@ -429,13 +474,134 @@ function VendorSchedules({ username, role, userId }) {
     );
   };
 
-  // Format a date as just the time
-  const formatTimeOnly = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  // Render week view
+  const renderWeekView = () => {
+    const days = getDaysInWeek();
+    const hours = getHourSlots();
+
+    return (
+      <div className={styles.weekViewContainer}>
+        <div className={styles.weekHeader}>
+          <div className={styles.weekTimeColumn}></div>
+          {days.map((day, index) => (
+            <div
+              key={index}
+              className={`${styles.weekDayColumn} ${
+                isToday(day) ? styles.todayColumn : ""
+              }`}
+            >
+              <div className={styles.weekDayName}>
+                {day.toLocaleDateString("en-US", { weekday: "short" })}
+              </div>
+              <div className={styles.weekDayDate}>
+                {day.toLocaleDateString("en-US", {
+                  month: "numeric",
+                  day: "numeric",
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.weekBody}>
+          {hours.map((hour, hourIndex) => (
+            <div key={hourIndex} className={styles.weekRow}>
+              <div className={styles.weekTimeColumn}>{hour}</div>
+
+              {days.map((day, dayIndex) => {
+                const eventsInHour = schedules.filter((event) =>
+                  isEventInHourSlot(event, day, hourIndex)
+                );
+
+                return (
+                  <div
+                    key={dayIndex}
+                    className={`${styles.weekDayCell} ${
+                      isToday(day) ? styles.todayCell : ""
+                    }`}
+                  >
+                    {eventsInHour.map((event, eventIndex) => (
+                      <div
+                        key={eventIndex}
+                        className={`${styles.weekEvent} ${
+                          styles[event.status]
+                        }`}
+                        onClick={() => handleViewSchedule(event)}
+                      >
+                        <div className={styles.weekEventTime}>
+                          {formatTimeOnly(event.start_time)} -{" "}
+                          {formatTimeOnly(event.end_time)}
+                        </div>
+                        <div className={styles.weekEventTitle}>
+                          {event.title}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Render day view
+  const renderDayView = () => {
+    const hours = getHourSlots();
+    const dayEvents = getEventsForDay(currentDate);
+
+    const formatDayHeader = (date) => {
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    };
+
+    return (
+      <div className={styles.dayViewContainer}>
+        <div className={styles.dayHeader}>
+          <div className={styles.dayTitle}>{formatDayHeader(currentDate)}</div>
+        </div>
+
+        <div className={styles.dayBody}>
+          {hours.map((hour, hourIndex) => {
+            const eventsInHour = dayEvents.filter((event) =>
+              isEventInHourSlot(event, currentDate, hourIndex)
+            );
+
+            return (
+              <div key={hourIndex} className={styles.dayRow}>
+                <div className={styles.dayTimeColumn}>{hour}</div>
+                <div className={styles.dayEventColumn}>
+                  {eventsInHour.map((event, eventIndex) => (
+                    <div
+                      key={eventIndex}
+                      className={`${styles.dayEvent} ${styles[event.status]}`}
+                      onClick={() => handleViewSchedule(event)}
+                    >
+                      <div className={styles.dayEventTime}>
+                        {formatTimeOnly(event.start_time)} -{" "}
+                        {formatTimeOnly(event.end_time)}
+                      </div>
+                      <div className={styles.dayEventTitle}>{event.title}</div>
+                      {event.location && (
+                        <div className={styles.dayEventLocation}>
+                          <FiMapPin /> {event.location}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -453,11 +619,14 @@ function VendorSchedules({ username, role, userId }) {
       {/* Calendar Controls */}
       <div className={styles.calendarControls}>
         <div className={styles.periodNavigation}>
-          <button className={styles.navButton} onClick={goToPreviousPeriod}>
+          <button className={styles.navButton} onClick={goToPreviousMonth}>
             <FiChevronLeft />
           </button>
+          <span className={styles.todayButton} onClick={goToToday}>
+            Today
+          </span>
           <h2 className={styles.currentPeriod}>{getCurrentPeriodString()}</h2>
-          <button className={styles.navButton} onClick={goToNextPeriod}>
+          <button className={styles.navButton} onClick={goToNextMonth}>
             <FiChevronRight />
           </button>
         </div>
@@ -500,6 +669,8 @@ function VendorSchedules({ username, role, userId }) {
       {/* Calendar View */}
       <div className={styles.calendarView}>
         {view === "month" && renderMonthView()}
+        {view === "week" && renderWeekView()}
+        {view === "day" && renderDayView()}
       </div>
 
       {/* View Schedule Modal */}

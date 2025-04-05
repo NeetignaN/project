@@ -61,7 +61,8 @@ function AppContent() {
         setIsAuthenticated(true);
         setUsername(user.username);
         setUserRole(user.role.toLowerCase());
-        setUserId(user.id);
+        // Fix: Use user.userId instead of user.id
+        setUserId(user.userId);
         setUserDetails(user.details);
       }
     }
