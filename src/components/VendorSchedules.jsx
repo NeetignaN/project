@@ -41,35 +41,6 @@ function VendorSchedules({ username, role, userId }) {
     vendor_id: userId,
   });
 
-  // Get current period string for the header
-  const getCurrentPeriodString = () => {
-    if (view === "month") {
-      return currentDate.toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      });
-    } else if (view === "week") {
-      const days = getDaysInWeek();
-      return `${formatDate(days[0])} - ${formatDate(days[days.length - 1])}`;
-    } else if (view === "day") {
-      return currentDate.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-    }
-  };
-
-  // Format a date as just the time
-  const formatTimeOnly = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   // Fetch schedules on component mount
   useEffect(() => {
     const fetchVendorSchedules = async () => {
@@ -82,12 +53,14 @@ function VendorSchedules({ username, role, userId }) {
 
           // Save data to context
           setSchedules(data.schedules || []);
+
           console.log("Fetched Schedules from API:", data.schedules);
         }
       } catch (error) {
         console.error("Error fetching data from API:", error);
+        setError("Failed to load schedules");
       } finally {
-        setLoading(false);
+        setLoading(false); // Ensure loading is set to false after fetching
       }
     };
 
@@ -332,6 +305,28 @@ function VendorSchedules({ username, role, userId }) {
     setCurrentDate(new Date());
   };
 
+  // Check if a date is today
+  const isToday = (date) => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  // Get events for a specific day
+  const getEventsForDay = (date) => {
+    return schedules.filter((event) => {
+      const eventDate = new Date(event.start_time);
+      return (
+        eventDate.getDate() === date.getDate() &&
+        eventDate.getMonth() === date.getMonth() &&
+        eventDate.getFullYear() === date.getFullYear()
+      );
+    });
+  };
+
   // Get days of the current week
   const getDaysInWeek = () => {
     const date = new Date(currentDate);
@@ -350,128 +345,89 @@ function VendorSchedules({ username, role, userId }) {
     return days;
   };
 
-  // Format date for week/day view headers
-  const formatShortDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "numeric",
-      day: "numeric",
-    });
-  };
-
-  // Get events for a specific day
-  const getEventsForDay = (date) => {
-    // Parse date to get year, month, day
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
-
-    // Filter schedules for this day
-    return schedules.filter((schedule) => {
-      const scheduleDate = new Date(schedule.start_time);
-      return (
-        scheduleDate.getFullYear() === year &&
-        scheduleDate.getMonth() === month &&
-        scheduleDate.getDate() === day
-      );
-    });
-  };
-
-  // Check if a date is today
-  const isToday = (date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
-
   // Get hour slots for day/week view
   const getHourSlots = () => {
     const hours = [];
-    for (let i = 7; i < 20; i++) {
-      // 7 AM to 7 PM
-      const hour = i % 12 || 12;
-      const ampm = i < 12 ? "AM" : "PM";
-      hours.push(`${hour} ${ampm}`);
+    for (let i = 0; i < 24; i++) {
+      hours.push(
+        i === 0
+          ? "12 AM"
+          : i < 12
+          ? `${i} AM`
+          : i === 12
+          ? "12 PM"
+          : `${i - 12} PM`
+      );
     }
     return hours;
   };
 
   // Check if an event is in a specific hour slot
-  const isEventInHourSlot = (event, date, hourIndex) => {
-    const eventDate = new Date(event.start_time);
-    const hour = eventDate.getHours();
-    const hourSlotValue = hourIndex + 7; // Adjust based on your hour slots (7 AM start)
+  const isEventInHourSlot = (event, date, hour) => {
+    const eventStart = new Date(event.start_time);
+    const eventEnd = new Date(event.end_time);
 
-    return (
-      eventDate.getDate() === date.getDate() &&
-      eventDate.getMonth() === date.getMonth() &&
-      eventDate.getFullYear() === date.getFullYear() &&
-      hour === hourSlotValue
-    );
+    const slotStart = new Date(date);
+    slotStart.setHours(hour, 0, 0, 0);
+
+    const slotEnd = new Date(date);
+    slotEnd.setHours(hour + 1, 0, 0, 0);
+
+    return eventStart < slotEnd && eventEnd > slotStart;
   };
 
-  // Render month view
-  const renderMonthView = () => {
+  // Render calendar days for month view
+  const renderCalendarDays = () => {
     const days = getDaysInMonthGrid();
-    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const rows = [];
+    const today = new Date();
 
-    return (
-      <div className={styles.monthViewContainer}>
-        <div className={styles.weekdaysHeader}>
-          {weekdays.map((day) => (
-            <div key={day} className={styles.weekdayCell}>
-              {day}
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.daysGrid}>
-          {days.map((day, index) => {
+    for (let i = 0; i < days.length; i += 7) {
+      const week = days.slice(i, i + 7);
+      rows.push(
+        <tr key={i}>
+          {week.map((day, index) => {
             const dayEvents = getEventsForDay(day.date);
-            const hasManyEvents = dayEvents.length > 2;
+            const isCurrentDay = isToday(day.date);
 
             return (
-              <div
+              <td
                 key={index}
-                className={`${styles.dayCell} ${
-                  day.outsideMonth ? styles.outsideMonth : ""
-                } ${isToday(day.date) ? styles.today : ""}`}
+                className={`${day.outsideMonth ? styles.outsideMonth : ""} ${
+                  isCurrentDay ? styles.today : ""
+                }`}
               >
                 <div className={styles.dayNumber}>{day.date.getDate()}</div>
-                <div className={styles.dayEvents}>
-                  {dayEvents.slice(0, 2).map((event, eventIndex) => (
-                    <div
-                      key={eventIndex}
-                      className={`${styles.eventItem} ${styles[event.status]}`}
-                      onClick={() => handleViewSchedule(event)}
-                    >
-                      <div className={styles.eventTime}>
-                        {formatTime(event.start_time)}
-                      </div>
-                      <div className={styles.eventTitle}>{event.title}</div>
-                    </div>
-                  ))}
-                  {hasManyEvents && (
-                    <div
-                      className={styles.moreEvents}
-                      onClick={() => {
-                        setCurrentDate(day.date);
-                        setView("day");
-                      }}
-                    >
-                      +{dayEvents.length - 2} more
-                    </div>
-                  )}
-                </div>
-              </div>
+                {dayEvents.slice(0, 3).map((event, eventIndex) => (
+                  <div
+                    key={eventIndex}
+                    className={`${styles.calendarEvent} ${
+                      styles[
+                        `event${
+                          event.status.charAt(0).toUpperCase() +
+                          event.status.slice(1)
+                        }`
+                      ]
+                    }`}
+                    title={event.title}
+                    onClick={() => handleViewSchedule(event)}
+                  >
+                    {formatTime(event.start_time)} {event.title}
+                  </div>
+                ))}
+                {dayEvents.length > 3 && (
+                  <div className={styles.moreEvents}>
+                    +{dayEvents.length - 3} more
+                  </div>
+                )}
+              </td>
             );
           })}
-        </div>
-      </div>
-    );
+        </tr>
+      );
+    }
+
+    return rows;
   };
 
   // Render week view
@@ -529,8 +485,8 @@ function VendorSchedules({ username, role, userId }) {
                         onClick={() => handleViewSchedule(event)}
                       >
                         <div className={styles.weekEventTime}>
-                          {formatTimeOnly(event.start_time)} -{" "}
-                          {formatTimeOnly(event.end_time)}
+                          {formatTime(event.start_time)} -{" "}
+                          {formatTime(event.end_time)}
                         </div>
                         <div className={styles.weekEventTitle}>
                           {event.title}
@@ -583,11 +539,11 @@ function VendorSchedules({ username, role, userId }) {
                       className={`${styles.dayEvent} ${styles[event.status]}`}
                       onClick={() => handleViewSchedule(event)}
                     >
-                      <div className={styles.dayEventTime}>
-                        {formatTimeOnly(event.start_time)} -{" "}
-                        {formatTimeOnly(event.end_time)}
-                      </div>
                       <div className={styles.dayEventTitle}>{event.title}</div>
+                      <div className={styles.dayEventTime}>
+                        {formatTime(event.start_time)} -{" "}
+                        {formatTime(event.end_time)}
+                      </div>
                       {event.location && (
                         <div className={styles.dayEventLocation}>
                           <FiMapPin /> {event.location}
@@ -604,34 +560,437 @@ function VendorSchedules({ username, role, userId }) {
     );
   };
 
+  // Render add schedule modal
+  const renderAddScheduleModal = () => {
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modal}>
+          <div className={styles.modalHeader}>
+            <h3>Add New Schedule</h3>
+            <button
+              className={styles.closeButton}
+              onClick={() => setShowAddModal(false)}
+            >
+              <FiX />
+            </button>
+          </div>
+          <div className={styles.modalBody}>
+            <div className={styles.formGroup}>
+              <label>Title*</label>
+              <input
+                type="text"
+                name="title"
+                value={newSchedule.title}
+                onChange={handleInputChange}
+                placeholder="Meeting title"
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Description</label>
+              <textarea
+                name="description"
+                value={newSchedule.description}
+                onChange={handleInputChange}
+                placeholder="Add details about this meeting"
+              />
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Start Time*</label>
+                <input
+                  type="datetime-local"
+                  name="start_time"
+                  value={newSchedule.start_time}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>End Time*</label>
+                <input
+                  type="datetime-local"
+                  name="end_time"
+                  value={newSchedule.end_time}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Location</label>
+              <input
+                type="text"
+                name="location"
+                value={newSchedule.location}
+                onChange={handleInputChange}
+                placeholder="Meeting location"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Product</label>
+              <select
+                name="product_id"
+                value={newSchedule.product_id || ""}
+                onChange={handleInputChange}
+              >
+                <option value="">Select a product</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Status</label>
+              <select
+                name="status"
+                value={newSchedule.status}
+                onChange={handleInputChange}
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+          <div className={styles.modalFooter}>
+            <button
+              className={styles.cancelButton}
+              onClick={() => setShowAddModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.saveButton}
+              onClick={handleAddSchedule}
+              disabled={
+                !newSchedule.title ||
+                !newSchedule.start_time ||
+                !newSchedule.end_time
+              }
+            >
+              <FiSave />
+              Save Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render view schedule modal
+  const renderViewScheduleModal = () => {
+    if (!selectedSchedule) return null;
+
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modal}>
+          <div className={styles.modalHeader}>
+            <h3>Schedule Details</h3>
+            <button
+              className={styles.closeButton}
+              onClick={() => setShowViewModal(false)}
+            >
+              <FiX />
+            </button>
+          </div>
+          <div className={styles.modalBody}>
+            <h2 className={styles.viewTitle}>{selectedSchedule.title}</h2>
+
+            <div className={styles.viewDetail}>
+              <FiCalendar />
+              <div>
+                <div className={styles.viewLabel}>Date & Time</div>
+                <div>
+                  {formatDate(selectedSchedule.start_time)} at{" "}
+                  {formatTime(selectedSchedule.start_time)} -{" "}
+                  {formatTime(selectedSchedule.end_time)}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.viewDetail}>
+              <FiMapPin />
+              <div>
+                <div className={styles.viewLabel}>Location</div>
+                <div>
+                  {selectedSchedule.location || "No location specified"}
+                </div>
+              </div>
+            </div>
+
+            {selectedSchedule.product_id && (
+              <div className={styles.viewDetail}>
+                <FiShoppingBag />
+                <div>
+                  <div className={styles.viewLabel}>Product</div>
+                  <div>{getProductName(selectedSchedule.product_id)}</div>
+                </div>
+              </div>
+            )}
+
+            <div className={styles.viewDescription}>
+              <div className={styles.viewLabel}>Description</div>
+              <p>
+                {selectedSchedule.description || "No description provided."}
+              </p>
+            </div>
+
+            <div className={styles.viewStatus}>
+              <div className={styles.viewLabel}>Status</div>
+              <div
+                className={`${styles.statusBadge} ${
+                  styles[selectedSchedule.status]
+                }`}
+              >
+                {selectedSchedule.status.charAt(0).toUpperCase() +
+                  selectedSchedule.status.slice(1)}
+              </div>
+            </div>
+          </div>
+          <div className={styles.modalFooter}>
+            <button
+              className={styles.cancelButton}
+              onClick={() => setShowViewModal(false)}
+            >
+              Close
+            </button>
+            <button
+              className={styles.editButton}
+              onClick={() => {
+                setShowViewModal(false);
+                handleEditSchedule(selectedSchedule);
+              }}
+            >
+              <FiEdit /> Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render edit schedule modal
+  const renderEditScheduleModal = () => {
+    if (!editSchedule) return null;
+
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modal}>
+          <div className={styles.modalHeader}>
+            <h3>Edit Schedule</h3>
+            <button
+              className={styles.closeButton}
+              onClick={() => setShowEditModal(false)}
+            >
+              <FiX />
+            </button>
+          </div>
+          <div className={styles.modalBody}>
+            <div className={styles.formGroup}>
+              <label>Title*</label>
+              <input
+                type="text"
+                name="title"
+                value={editSchedule.title}
+                onChange={handleEditInputChange}
+                placeholder="Meeting title"
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Description</label>
+              <textarea
+                name="description"
+                value={editSchedule.description}
+                onChange={handleEditInputChange}
+                placeholder="Add details about this meeting"
+              />
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Start Time*</label>
+                <input
+                  type="datetime-local"
+                  name="start_time"
+                  value={editSchedule.start_time}
+                  onChange={handleEditInputChange}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>End Time*</label>
+                <input
+                  type="datetime-local"
+                  name="end_time"
+                  value={editSchedule.end_time}
+                  onChange={handleEditInputChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Location</label>
+              <input
+                type="text"
+                name="location"
+                value={editSchedule.location}
+                onChange={handleEditInputChange}
+                placeholder="Meeting location"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Product</label>
+              <select
+                name="product_id"
+                value={editSchedule.product_id || ""}
+                onChange={handleEditInputChange}
+              >
+                <option value="">Select a product</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Status</label>
+              <select
+                name="status"
+                value={editSchedule.status}
+                onChange={handleEditInputChange}
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+          <div className={styles.modalFooter}>
+            <button
+              className={styles.cancelButton}
+              onClick={() => setShowEditModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.saveButton}
+              onClick={saveEditedSchedule}
+              disabled={
+                !editSchedule.title ||
+                !editSchedule.start_time ||
+                !editSchedule.end_time
+              }
+            >
+              <FiSave />
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render delete confirmation modal
+  const renderDeleteConfirmModal = () => {
+    if (!selectedSchedule) return null;
+
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modal}>
+          <div className={styles.modalHeader}>
+            <h3>Delete Schedule</h3>
+            <button
+              className={styles.closeButton}
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              <FiX />
+            </button>
+          </div>
+          <div className={styles.modalBody}>
+            <p className={styles.confirmText}>
+              Are you sure you want to delete "{selectedSchedule.title}"? This
+              action cannot be undone.
+            </p>
+          </div>
+          <div className={styles.modalFooter}>
+            <button
+              className={styles.cancelButton}
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.deleteButton}
+              onClick={confirmDeleteSchedule}
+            >
+              <FiTrash2 />
+              Delete Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
-    return <div className={styles.loading}>Loading schedules...</div>;
+    return <div className={styles.container}>Loading schedules...</div>;
   }
 
   if (error) {
-    return <div className={styles.error}>Error: {error}</div>;
+    return <div className={styles.container}>Error: {error}</div>;
   }
 
   return (
-    <div className={styles.schedulesContainer}>
-      <h1 className={styles.pageTitle}>Schedules</h1>
-
-      {/* Calendar Controls */}
-      <div className={styles.calendarControls}>
-        <div className={styles.periodNavigation}>
-          <button className={styles.navButton} onClick={goToPreviousMonth}>
-            <FiChevronLeft />
-          </button>
-          <span className={styles.todayButton} onClick={goToToday}>
-            Today
-          </span>
-          <h2 className={styles.currentPeriod}>{getCurrentPeriodString()}</h2>
-          <button className={styles.navButton} onClick={goToNextMonth}>
-            <FiChevronRight />
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Schedules</h2>
+        <div className={styles.actions}>
+          <button
+            className={styles.addButton}
+            onClick={() => setShowAddModal(true)}
+          >
+            <FiPlus /> Add Schedule
           </button>
         </div>
-        <div className={styles.viewControls}>
-          <div className={styles.viewButtons}>
+      </div>
+
+      <div className={styles.calendarView}>
+        <div className={styles.navigationHeader}>
+          <div className={styles.navigationControls}>
+            <button className={styles.navButton} onClick={goToPreviousMonth}>
+              <FiChevronLeft />
+            </button>
+            <button className={styles.navButton} onClick={goToToday}>
+              Today
+            </button>
+            <button className={styles.navButton} onClick={goToNextMonth}>
+              <FiChevronRight />
+            </button>
+            <div className={styles.currentDate}>
+              {formatMonthAndYear(currentDate)}
+            </div>
+          </div>
+          <div className={styles.viewControls}>
             <button
               className={`${styles.viewButton} ${
                 view === "month" ? styles.active : ""
@@ -657,382 +1016,93 @@ function VendorSchedules({ username, role, userId }) {
               Day
             </button>
           </div>
-          <button
-            className={styles.addButton}
-            onClick={() => setShowAddModal(true)}
-          >
-            <FiPlus /> Add Schedule
-          </button>
         </div>
+
+        {view === "month" && (
+          <table className={styles.calendar}>
+            <thead>
+              <tr>
+                <th>Sunday</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+              </tr>
+            </thead>
+            <tbody>{renderCalendarDays()}</tbody>
+          </table>
+        )}
+
+        {view === "week" && (
+          <div className={styles.weekView}>{renderWeekView()}</div>
+        )}
+
+        {view === "day" && (
+          <div className={styles.dayView}>{renderDayView()}</div>
+        )}
       </div>
 
-      {/* Calendar View */}
-      <div className={styles.calendarView}>
-        {view === "month" && renderMonthView()}
-        {view === "week" && renderWeekView()}
-        {view === "day" && renderDayView()}
+      <div className={styles.eventsList}>
+        <div className={styles.eventsHeader}>Upcoming Events</div>
+        {schedules.length === 0 ? (
+          <div className={styles.eventItem}>No scheduled events yet.</div>
+        ) : (
+          schedules
+            .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+            .map((event, index) => (
+              <div key={index} className={styles.eventItem}>
+                <div
+                  className={`${styles.eventColor} ${styles[event.status]}`}
+                ></div>
+                <div className={styles.eventDetails}>
+                  <div className={styles.eventTitle}>{event.title}</div>
+                  <div className={styles.eventInfo}>
+                    <div className={styles.eventInfoItem}>
+                      <FiClock />
+                      {formatDate(event.start_time)} at{" "}
+                      {formatTime(event.start_time)} -{" "}
+                      {formatTime(event.end_time)}
+                    </div>
+                    <div className={styles.eventInfoItem}>
+                      <FiMapPin />
+                      {event.location || "No location specified"}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.eventActions}>
+                  <button
+                    className={styles.actionButton}
+                    title="View"
+                    onClick={() => handleViewSchedule(event)}
+                  >
+                    <FiEye />
+                  </button>
+                  <button
+                    className={styles.actionButton}
+                    title="Edit"
+                    onClick={() => handleEditSchedule(event)}
+                  >
+                    <FiEdit />
+                  </button>
+                  <button
+                    className={styles.actionButton}
+                    title="Delete"
+                    onClick={() => handleDeleteSchedule(event)}
+                  >
+                    <FiTrash2 />
+                  </button>
+                </div>
+              </div>
+            ))
+        )}
       </div>
 
-      {/* View Schedule Modal */}
-      {showViewModal && selectedSchedule && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Schedule Details</h3>
-              <button
-                className={styles.closeButton}
-                onClick={() => setShowViewModal(false)}
-              >
-                <FiX />
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <h2 className={styles.viewTitle}>{selectedSchedule.title}</h2>
-
-              <div className={styles.viewDetail}>
-                <FiCalendar />
-                <div>
-                  <div className={styles.viewLabel}>Date & Time</div>
-                  <div>
-                    {formatDate(selectedSchedule.start_time)},{" "}
-                    {formatTimeOnly(selectedSchedule.start_time)} to{" "}
-                    {formatTimeOnly(selectedSchedule.end_time)}
-                  </div>
-                </div>
-              </div>
-
-              {selectedSchedule.location && (
-                <div className={styles.viewDetail}>
-                  <FiMapPin />
-                  <div>
-                    <div className={styles.viewLabel}>Location</div>
-                    <div>{selectedSchedule.location}</div>
-                  </div>
-                </div>
-              )}
-
-              {selectedSchedule.product_id && (
-                <div className={styles.viewDetail}>
-                  <FiShoppingBag />
-                  <div>
-                    <div className={styles.viewLabel}>Related Product</div>
-                    <div>{getProductName(selectedSchedule.product_id)}</div>
-                  </div>
-                </div>
-              )}
-
-              {selectedSchedule.description && (
-                <div className={styles.viewDescription}>
-                  <div className={styles.viewLabel}>Description</div>
-                  <p>{selectedSchedule.description}</p>
-                </div>
-              )}
-
-              <div className={styles.viewActions}>
-                <button
-                  className={styles.editButton}
-                  onClick={() => {
-                    setShowViewModal(false);
-                    handleEditSchedule(selectedSchedule);
-                  }}
-                >
-                  <FiEdit /> Edit
-                </button>
-                <button
-                  className={styles.deleteButton}
-                  onClick={() => {
-                    setShowViewModal(false);
-                    handleDeleteSchedule(selectedSchedule);
-                  }}
-                >
-                  <FiTrash2 /> Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Schedule Modal */}
-      {showAddModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Add New Schedule</h3>
-              <button
-                className={styles.closeButton}
-                onClick={() => setShowAddModal(false)}
-              >
-                <FiX />
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddSchedule();
-                }}
-              >
-                <div className={styles.formGroup}>
-                  <label htmlFor="title">Title</label>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    value={newSchedule.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="description">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={newSchedule.description}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="start_time">Start Time</label>
-                    <input
-                      type="datetime-local"
-                      id="start_time"
-                      name="start_time"
-                      value={newSchedule.start_time}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="end_time">End Time</label>
-                    <input
-                      type="datetime-local"
-                      id="end_time"
-                      name="end_time"
-                      value={newSchedule.end_time}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="location">Location</label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={newSchedule.location}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="product_id">Related Product</label>
-                  <select
-                    id="product_id"
-                    name="product_id"
-                    value={newSchedule.product_id}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">None</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="status">Status</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={newSchedule.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-
-                <div className={styles.formActions}>
-                  <button
-                    type="button"
-                    className={styles.cancelButton}
-                    onClick={() => setShowAddModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className={styles.saveButton}>
-                    <FiSave /> Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Schedule Modal */}
-      {showEditModal && editSchedule && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Edit Schedule</h3>
-              <button
-                className={styles.closeButton}
-                onClick={() => setShowEditModal(false)}
-              >
-                <FiX />
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  saveEditedSchedule();
-                }}
-              >
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit_title">Title</label>
-                  <input
-                    type="text"
-                    id="edit_title"
-                    name="title"
-                    value={editSchedule.title}
-                    onChange={handleEditInputChange}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit_description">Description</label>
-                  <textarea
-                    id="edit_description"
-                    name="description"
-                    value={editSchedule.description}
-                    onChange={handleEditInputChange}
-                  />
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="edit_start_time">Start Time</label>
-                    <input
-                      type="datetime-local"
-                      id="edit_start_time"
-                      name="start_time"
-                      value={editSchedule.start_time}
-                      onChange={handleEditInputChange}
-                      required
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="edit_end_time">End Time</label>
-                    <input
-                      type="datetime-local"
-                      id="edit_end_time"
-                      name="end_time"
-                      value={editSchedule.end_time}
-                      onChange={handleEditInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit_location">Location</label>
-                  <input
-                    type="text"
-                    id="edit_location"
-                    name="location"
-                    value={editSchedule.location}
-                    onChange={handleEditInputChange}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit_product_id">Related Product</label>
-                  <select
-                    id="edit_product_id"
-                    name="product_id"
-                    value={editSchedule.product_id}
-                    onChange={handleEditInputChange}
-                  >
-                    <option value="">None</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit_status">Status</label>
-                  <select
-                    id="edit_status"
-                    name="status"
-                    value={editSchedule.status}
-                    onChange={handleEditInputChange}
-                  >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-
-                <div className={styles.formActions}>
-                  <button
-                    type="button"
-                    className={styles.cancelButton}
-                    onClick={() => setShowEditModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className={styles.saveButton}>
-                    <FiSave /> Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && selectedSchedule && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.confirmModal}>
-            <h3>Confirm Delete</h3>
-            <p>
-              Are you sure you want to delete the schedule "
-              {selectedSchedule.title}"? This action cannot be undone.
-            </p>
-            <div className={styles.confirmActions}>
-              <button
-                className={styles.cancelButton}
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className={styles.deleteButton}
-                onClick={confirmDeleteSchedule}
-              >
-                <FiTrash2 /> Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showAddModal && renderAddScheduleModal()}
+      {showViewModal && renderViewScheduleModal()}
+      {showEditModal && renderEditScheduleModal()}
+      {showDeleteConfirm && renderDeleteConfirmModal()}
     </div>
   );
 }
