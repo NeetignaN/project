@@ -1,5 +1,6 @@
 import { DesignerDataProvider } from "./contexts/DesignerDataContext.jsx";
 import { ClientDataProvider } from "./contexts/ClientDataContext.jsx";
+import { AdminDataProvider } from "./contexts/AdminDataContext.jsx";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -13,8 +14,13 @@ import Login from "./components/Login.jsx";
 import LandingPage from "./components/LandingPage.jsx";
 import DesignerLayout from "./components/DesignerLayout.jsx";
 import ClientLayout from "./components/ClientLayout.jsx";
+import AdminLayout from "./components/AdminLayout.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import ClientDashboard from "./components/ClientDashboard.jsx";
+import AdminDashboard from "./components/AdminDashboard.jsx";
+import AdminUsers from "./components/AdminUsers.jsx";
+import AdminProjects from "./components/AdminProjects.jsx";
+import AdminSettings from "./components/AdminSettings.jsx";
 import ClientSettings from "./components/ClientSettings.jsx";
 import Clients from "./components/Clients.jsx";
 import Projects from "./components/Projects.jsx";
@@ -218,19 +224,47 @@ function AppContent() {
         <Route path="*" element={<Navigate to="/client/dashboard" replace />} />
       </Route>
 
+      {/* Admin Routes */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminDataProvider>
+              <AdminLayout onLogout={handleLogout} username={username} />
+            </AdminDataProvider>
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          path="dashboard"
+          element={
+            <AdminDashboard
+              username={username}
+              role={userRole}
+              userId={userId}
+              userDetails={userDetails}
+            />
+          }
+        />
+        <Route
+          path="users"
+          element={<AdminUsers userId={userId} role={userRole} />}
+        />
+        <Route
+          path="projects"
+          element={<AdminProjects userId={userId} role={userRole} />}
+        />
+        <Route
+          path="settings"
+          element={<AdminSettings userId={userId} role={userRole} />}
+        />
+        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+      </Route>
+
       <Route
         path="/vendor/dashboard"
         element={
           <ProtectedRoute allowedRoles={["vendor"]}>
-            <Dashboard username={username} role={userRole} userId={userId} />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
             <Dashboard username={username} role={userRole} userId={userId} />
           </ProtectedRoute>
         }
