@@ -2,6 +2,10 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border-radius: 8px;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 450px;
+    /* Set fixed height for consistency */
 }
 
 .projectCard:hover {
@@ -28,9 +32,11 @@
 }
 
 .projectImage {
-    height: 180px;
+    height: 225px;
+    /* Exactly half of card height */
     object-fit: cover;
     transition: opacity 0.3s ease;
+    width: 100%;
 }
 
 .projectCard:hover .projectImage {

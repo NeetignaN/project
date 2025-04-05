@@ -323,6 +323,7 @@ function Vendors({ username, role, userId }) {
                         </div>
                       </div>
 
+                      {/* Vendor details section start */}
                       <div className={styles.vendorDetails}>
                         <div className={styles.vendorMaterials}>
                           <span className={styles.materialsLabel}>
@@ -367,19 +368,20 @@ function Vendors({ username, role, userId }) {
                               </span>
                             </div>
                           </div>
-                        </div>
 
-                        <button
-                          className={styles.messageButton}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSendMessage(vendor);
-                          }}
-                        >
-                          <FiMessageSquare />
-                          Message
-                        </button>
+                          <button
+                            className={styles.messageButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendMessage(vendor);
+                            }}
+                          >
+                            <FiMessageSquare />
+                            Message
+                          </button>
+                        </div>
                       </div>
+                      {/* Vendor details section end */}
                     </div>
                   ))}
                 </div>
@@ -402,11 +404,7 @@ function Vendors({ username, role, userId }) {
                 ) : (
                   <div className={styles.productsList}>
                     {vendorProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className={styles.productCard}
-                        onClick={() => toggleProductDetails(product.id)}
-                      >
+                      <div key={product.id} className={styles.productCard}>
                         <div className={styles.productHeader}>
                           <h3 className={styles.productName}>{product.name}</h3>
                           <div className={styles.productPrice}>
@@ -423,14 +421,16 @@ function Vendors({ username, role, userId }) {
                           </span>
                         </div>
 
-                        <div className={styles.productExpand}>
+                        <div
+                          className={styles.productExpand}
+                          onClick={() => toggleProductDetails(product.id)}
+                        >
                           {activeProductId === product.id ? (
                             <FiChevronUp />
                           ) : (
                             <FiChevronDown />
                           )}
                         </div>
-
                         {activeProductId === product.id && (
                           <div className={styles.productDetails}>
                             <p className={styles.productDescription}>
@@ -443,7 +443,10 @@ function Vendors({ username, role, userId }) {
                                   Dimensions:
                                 </span>
                                 <span className={styles.attributeValue}>
-                                  {product.dimensions.join(" x ")}
+                                  {product.dimensions &&
+                                  Array.isArray(product.dimensions)
+                                    ? product.dimensions.join(" x ")
+                                    : "Not specified"}
                                 </span>
                               </div>
                               <div className={styles.attributeItem}>

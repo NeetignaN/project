@@ -173,9 +173,11 @@ function DesignerDashboard({ userDetails, userId, role }) {
   // Calculate progress for project
   const calculateProgress = (project) => {
     if (project.status === "completed") return 100;
-    if (project.status === "in_progress") return 30; // Mock value
+    if (project.status === "in_progress" || project.status === "active")
+      return 30; // Mock value
     return 0;
   };
+
   return (
     <>
       <div className={styles.summaryCards}>
