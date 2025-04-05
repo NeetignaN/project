@@ -7,7 +7,6 @@ import {
   FiPhone,
   FiMapPin,
   FiHome,
-  FiCreditCard,
   FiLock,
 } from "react-icons/fi";
 
@@ -72,14 +71,6 @@ function ClientSettings({ userId, role }) {
                 onClick={() => setActiveTab("password")}
               >
                 <FiLock className="me-2" /> Password
-              </button>
-              <button
-                className={`list-group-item list-group-item-action d-flex align-items-center ${
-                  activeTab === "billing" ? "active" : ""
-                }`}
-                onClick={() => setActiveTab("billing")}
-              >
-                <FiCreditCard className="me-2" /> Billing
               </button>
             </div>
           </div>
@@ -318,49 +309,6 @@ function ClientSettings({ userId, role }) {
                       </button>
                     </div>
                   </form>
-                </>
-              )}
-
-              {/* Billing Settings */}
-              {activeTab === "billing" && (
-                <>
-                  <h3 className="h5 mb-4">Billing Information</h3>
-                  <div className="alert alert-info">
-                    <p className="mb-0">
-                      Your billing information is managed through our secure
-                      payment processing system. Please contact your project
-                      manager for any billing-related inquiries.
-                    </p>
-                  </div>
-
-                  <h4 className="h6 mt-4 mb-3">Payment Methods</h4>
-                  <div className="card mb-3">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                          <div className="d-flex align-items-center">
-                            <FiCreditCard className="me-2 text-primary" />
-                            <strong>Visa ending in 4567</strong>
-                          </div>
-                          <small className="text-muted">Expires 12/2025</small>
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-danger"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="d-grid gap-2 d-md-flex justify-content-md-start">
-                    <button type="button" className="btn btn-outline-primary">
-                      <FiCreditCard className="me-2" /> Add Payment Method
-                    </button>
-                  </div>
                 </>
               )}
             </div>
