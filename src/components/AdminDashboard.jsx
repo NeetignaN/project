@@ -331,9 +331,9 @@ function AdminDashboard({ userDetails, userId, role }) {
                         <span className="badge bg-light text-dark">
                           ID: {user.id}
                         </span>
-                        <button className="btn btn-sm btn-outline-primary">
+                        {/* <button className="btn btn-sm btn-outline-primary">
                           View Details
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </div>

@@ -79,6 +79,92 @@ app.get("/", (req, res) => {
   res.send("🚀 Welcome to the Interiora API!");
 });
 
+// Add a new client (designer invites client)
+app.post("/clients", async (req, res) => {
+  const db = client.db("Interiora");
+  const clientData = req.body;
+
+  // Generate a unique ID if not provided
+  if (!clientData.id) {
+    clientData.id = "client_" + Date.now();
+  }
+
+  // Insert client into clients collection
+  await db.collection("clients").insertOne(clientData);
+
+  // Try to add to credentials (ignore duplicate error)
+  try {
+    await db.collection("credentials").insertOne({
+      id: clientData.id,
+      email: clientData.email,
+      name: clientData.name,
+      role: "client",
+      // No password at this stage
+    });
+  } catch (err) {
+    // If duplicate key error (already exists), ignore
+    if (err.code !== 11000) {
+      return res
+        .status(500)
+        .json({ error: "Failed to add client credentials" });
+    }
+  }
+
+  res.status(201).json({ data: clientData });
+});
+
+// Add a new credentials entry
+app.post("/credentials", async (req, res) => {
+  const db = client.db("Interiora");
+  const { id, email, name, role, password } = req.body;
+
+  if (!id || !email || !role) {
+    return res.status(400).json({ error: "id, email, and role are required" });
+  }
+
+  // Check if credentials already exist for this email and role
+  const existing = await db.collection("credentials").findOne({ email, role });
+  if (existing) {
+    return res.status(409).json({ error: "Credentials already exist" });
+  }
+
+  // Insert credentials (password is optional)
+  await db.collection("credentials").insertOne({
+    id,
+    email,
+    name,
+    role,
+    ...(password ? { password } : {}),
+  });
+
+  res.status(201).json({ success: true, message: "Credentials created" });
+});
+
+app.patch("/credentials", async (req, res) => {
+  const { email, password, role } = req.body;
+  const db = client.db("Interiora");
+  if (!email || !password || !role) {
+    return res
+      .status(400)
+      .json({ error: "Email, password, and role are required" });
+  }
+  const cred = await db.collection("credentials").findOne({ email, role });
+  if (!cred) {
+    return res
+      .status(400)
+      .json({ error: "You are not invited. Contact your designer." });
+  }
+  if (cred.password) {
+    return res
+      .status(400)
+      .json({ error: "Account already exists. Please login." });
+  }
+  await db
+    .collection("credentials")
+    .updateOne({ email, role }, { $set: { password } });
+  res.json({ success: true });
+});
+
 // Role-based user fetch
 app.get("/users/:role/:userId", async (req, res) => {
   const { role, userId } = req.params;
@@ -223,6 +309,7 @@ app.delete("/designers/:id", async (req, res) => {
   try {
     const db = client.db("Interiora");
     const result = await db.collection("designers").deleteOne({ id: id });
+    await db.collection("credentials").deleteOne({ id: id });
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Designer not found" });
     }
@@ -239,6 +326,7 @@ app.delete("/vendors/:id", async (req, res) => {
   try {
     const db = client.db("Interiora");
     const result = await db.collection("vendors").deleteOne({ id: id });
+    await db.collection("credentials").deleteOne({ id: id });
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Vendor not found" });
     }
@@ -255,6 +343,7 @@ app.delete("/clients/:id", async (req, res) => {
   try {
     const db = client.db("Interiora");
     const result = await db.collection("clients").deleteOne({ id: id });
+    await db.collection("credentials").deleteOne({ id: id });
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Client not found" });
     }
@@ -263,6 +352,27 @@ app.delete("/clients/:id", async (req, res) => {
     console.error("❌ Error deleting client:", err);
     res.status(500).json({ error: "Error deleting client" });
   }
+});
+
+app.post("/projects", async (req, res) => {
+  const db = client.db("Interiora");
+  const projectData = req.body;
+  if (!projectData.id) {
+    projectData.id = "project_" + Date.now();
+  }
+  await db.collection("projects").insertOne(projectData);
+
+  // Add project ID to the client's projects array
+  if (projectData.client_id) {
+    await db
+      .collection("clients")
+      .updateOne(
+        { id: projectData.client_id },
+        { $addToSet: { projects: projectData.id } }
+      );
+  }
+
+  res.status(201).json({ data: projectData });
 });
 
 // Start server

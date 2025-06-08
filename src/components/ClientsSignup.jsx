@@ -20,11 +20,27 @@ function ClientSignup() {
     setIsLoading(true);
     setSuccess("");
     try {
-      await api.registerClient({ name, email }, password);
+      // Only send email and password for signup
+      await api.clientSignup({ email, password });
       setSuccess("Registration successful! Redirecting to login...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setError(err.message || "Signup failed. Please try again.");
+      // Show specific messages based on backend response
+      if (
+        err.message === "You are not invited. Contact your designer." ||
+        err.message.toLowerCase().includes("not invited")
+      ) {
+        setError(
+          "You are not invited. Please contact your designer to be added."
+        );
+      } else if (
+        err.message === "Account already exists. Please login." ||
+        err.message.toLowerCase().includes("already exists")
+      ) {
+        setError("Account already exists. Please log in instead.");
+      } else {
+        setError(err.message || "Signup failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

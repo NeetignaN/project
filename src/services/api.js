@@ -38,52 +38,18 @@ const api = {
   },
 
   // Register a new client (signup)
-  registerClient: async (clientData, password) => {
-    try {
-      // Generate a unique ID if not provided
-      if (!clientData.id) {
-        clientData.id = `client_${Date.now()}`;
-      }
-
-      // 1. Create the client in the clients collection
-      const clientRes = await fetch(`${BASE_URL}/clients`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(clientData),
-      });
-
-      if (!clientRes.ok) {
-        throw new Error("Failed to register client");
-      }
-
-      // 2. Create the credentials for login
-      const credentialsRes = await fetch(`${BASE_URL}/credentials`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: clientData.id,
-          email: clientData.email,
-          password,
-          role: "client",
-        }),
-      });
-
-      if (!credentialsRes.ok) {
-        throw new Error("Failed to create client credentials");
-      }
-
-      return {
-        success: true,
-        client: await clientRes.json(),
-      };
-    } catch (error) {
-      console.error("Error registering client:", error);
-      throw error;
+  clientSignup: async ({ email, password }) => {
+    // This will PATCH the credentials entry for the client
+    const response = await fetch(`${BASE_URL}/credentials`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, role: "client" }),
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Signup failed");
     }
+    return await response.json();
   },
 
   // Register Designer
@@ -195,12 +161,7 @@ const api = {
             (p) => p.designer_id === userId
           );
 
-          const uniqueClientIds = [
-            ...new Set(result.projects.map((p) => p.client_id)),
-          ];
-          result.clients = uniqueClientIds.map((cid) =>
-            clientsData.find((c) => c.id === cid)
-          );
+          result.clients = clientsData.filter((c) => c.designer_id === userId);
 
           const currentDesigner = designersData.find((d) => d.id === userId);
           result.vendors = vendorsData.filter((v) =>
@@ -374,7 +335,7 @@ const api = {
     }
   },
 
-  // Add a new client
+  // Add a new client (designer invites client)
   addClient: async (clientData) => {
     try {
       // Generate a unique ID if not provided
@@ -382,6 +343,9 @@ const api = {
         clientData.id = `client_${Date.now()}`;
       }
 
+      console.log(clientData);
+
+      // 1. Add client to clients collection
       const response = await fetch(`${BASE_URL}/clients`, {
         method: "POST",
         headers: {
@@ -393,8 +357,31 @@ const api = {
       if (!response.ok) {
         throw new Error("Failed to add client");
       }
+      const clientRes = await response.json();
+      const client = clientRes.data; // <-- get the actual client object
 
-      return await response.json();
+      // 2. Add client to credentials collection (without password)
+      // Only add if not already present
+      const credRes = await fetch(`${BASE_URL}/credentials`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: client.id,
+          email: client.email,
+          name: client.name,
+          role: "client",
+          // No password at this stage
+        }),
+      });
+
+      // It's OK if already exists (409), but throw for other errors
+      if (!credRes.ok && credRes.status !== 409) {
+        throw new Error("Failed to add client credentials");
+      }
+
+      return client;
     } catch (error) {
       console.error("Error adding client:", error);
       throw error;

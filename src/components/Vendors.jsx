@@ -351,7 +351,7 @@ function Vendors({ username, role, userId }) {
                             Materials:
                           </span>
                           <div className={styles.materialsTags}>
-                            {vendor.materials.map((material) => (
+                            {(vendor.materials || []).map((material) => (
                               <span
                                 key={material}
                                 className={styles.materialTag}
@@ -692,7 +692,7 @@ function Vendors({ username, role, userId }) {
                         <div className="mt-3">
                           <div className="d-flex flex-wrap mb-2">
                             <span className="fw-bold me-2">Materials:</span>
-                            {vendor.materials.map((material) => (
+                            {(vendor.materials || []).map((material) => (
                               <span
                                 key={material}
                                 className="badge bg-light text-dark me-1 mb-1"

@@ -47,7 +47,9 @@ function Clients({ username, role, userId }) {
   useEffect(() => {
     if (!hasHandledLocationState.current) {
       if (location.state?.clientId && clients.length > 0) {
-        const client = clients.find((c) => c.id === location.state.clientId);
+        const client = clients.find(
+          (c) => c && c.id === location.state.clientId
+        );
         if (client) {
           setSelectedClient(client);
           setShowDetailsModal(true);
@@ -96,17 +98,20 @@ function Clients({ username, role, userId }) {
     e.preventDefault();
 
     try {
-      // Format total_spend as a number
+      // Format total_spend as a number and add designer_id
       const formattedClient = {
         ...newClient,
         total_spend: parseFloat(newClient.total_spend),
+        designer_id: userId, // <-- Add the designer's id here
       };
 
       // Add client to API
       const response = await api.addClient(formattedClient);
 
-      // Add client to local state
-      setClients([...clients, response.data]);
+      // Defensive: only add if response is valid and has a name
+      if (response && response.name) {
+        setClients([...clients, response]);
+      }
 
       // Close modal and reset form
       setShowAddModal(false);
@@ -180,11 +185,14 @@ function Clients({ username, role, userId }) {
 
       <div className="row g-4">
         {clients.map((client) => {
+          if (!client) return null; // Defensive: skip undefined/null clients
           const initials = client.name
-            .split(" ")
-            .map((name) => name[0])
-            .join("")
-            .toUpperCase();
+            ? client.name
+                .split(" ")
+                .map((name) => name[0])
+                .join("")
+                .toUpperCase()
+            : "";
 
           const projectCount = client.projects ? client.projects.length : 0;
 
