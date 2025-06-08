@@ -37,6 +37,55 @@ const api = {
     }
   },
 
+  // Register a new client (signup)
+  registerClient: async (clientData, password) => {
+    try {
+      // Generate a unique ID if not provided
+      if (!clientData.id) {
+        clientData.id = `client_${Date.now()}`;
+      }
+
+      // 1. Create the client in the clients collection
+      const clientRes = await fetch(`${BASE_URL}/clients`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(clientData),
+      });
+
+      if (!clientRes.ok) {
+        throw new Error("Failed to register client");
+      }
+
+      // 2. Create the credentials for login
+      const credentialsRes = await fetch(`${BASE_URL}/credentials`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: clientData.id,
+          email: clientData.email,
+          password,
+          role: "client",
+        }),
+      });
+
+      if (!credentialsRes.ok) {
+        throw new Error("Failed to create client credentials");
+      }
+
+      return {
+        success: true,
+        client: await clientRes.json(),
+      };
+    } catch (error) {
+      console.error("Error registering client:", error);
+      throw error;
+    }
+  },
+
   getData: async (resourceType, id = "") => {
     // Updated path for generic resource
     const path = id

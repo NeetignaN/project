@@ -38,6 +38,7 @@ import ClientSchedules from "./components/ClientSchedules.jsx";
 import Vendors from "./components/Vendors.jsx";
 import VendorProducts from "./components/VendorProducts.jsx";
 import authService from "./services/authService.js";
+import ClientSignup from "./components/ClientsSignup.jsx";
 
 // Main App Component
 function App() {
@@ -104,6 +105,7 @@ function AppContent() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/signup" element={<ClientSignup />} />
       <Route
         path="/login"
         element={

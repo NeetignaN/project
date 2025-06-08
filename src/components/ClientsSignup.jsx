@@ -1,40 +1,30 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import styles from "./Login.module.css";
-import authService from "../services/authService";
+import api from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
 import "../index.css";
 
-function Login({ onLoginSuccess }) {
-  const [role, setRole] = useState("client");
+function ClientSignup() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-
+    setSuccess("");
     try {
-      // Use authService instead of direct fetch call
-      const userData = await authService.login(email, password, role);
-      // console.log(email);
-      // console.log(role);
-      // console.log(password);
-      console.log(userData);
-
-      // Login successful
-      onLoginSuccess(
-        userData.username,
-        role,
-        userData.userId,
-        userData.details
-      );
+      await api.registerClient({ name, email }, password);
+      setSuccess("Registration successful! Redirecting to login...");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      // Display error message
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.message || "Signup failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -44,25 +34,24 @@ function Login({ onLoginSuccess }) {
     <div className={styles.container}>
       <div className={styles.formContainer}>
         <div>
-          <h2 className={styles.title}>Sign in to your account</h2>
+          <h2 className={styles.title}>Sign up as a Client</h2>
         </div>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <div>
-              <label htmlFor="role" className={styles.label}>
-                Role
+              <label htmlFor="name" className={styles.label}>
+                Name
               </label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className={styles.select}
-              >
-                <option value="designer">Designer</option>
-                <option value="client">User</option>
-                <option value="vendor">Vendor</option>
-                <option value="admin">Admin</option>
-              </select>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={styles.input}
+                placeholder="Your name"
+              />
             </div>
             <div>
               <label htmlFor="email" className={styles.label}>
@@ -88,7 +77,7 @@ function Login({ onLoginSuccess }) {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -104,6 +93,7 @@ function Login({ onLoginSuccess }) {
               {error}
             </div>
           )}
+          {success && <div className={styles.success}>{success}</div>}
 
           <div>
             <button
@@ -111,16 +101,16 @@ function Login({ onLoginSuccess }) {
               disabled={isLoading}
               className={`${styles.button} button`}
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? "Signing up..." : "Sign up"}
             </button>
           </div>
         </form>
         <p style={{ marginTop: "1rem" }}>
-          Don't have an account? <Link to="/signup">Sign up here</Link>
+          Already have an account? <Link to="/login">Log in</Link>
         </p>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default ClientSignup;
