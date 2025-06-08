@@ -26,6 +26,17 @@ function AdminUsers({ userId, role }) {
   // Modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [editFormError, setEditFormError] = useState("");
+  const [editFormSuccess, setEditFormSuccess] = useState("");
+  const [editFormLoading, setEditFormLoading] = useState(false);
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteUser, setDeleteUser] = useState(null);
+
   // Form state for new designer/vendor
   const [newUser, setNewUser] = useState({
     name: "",
@@ -310,6 +321,101 @@ function AdminUsers({ userId, role }) {
     }
   };
 
+  // --- EDIT HANDLERS ---
+  const handleEditClick = (user) => {
+    setEditUser({ ...user });
+    setShowEditModal(true);
+    setEditFormError("");
+    setEditFormSuccess("");
+  };
+
+  const handleEditInputChange = (e) => {
+    setEditUser({ ...editUser, [e.target.name]: e.target.value });
+  };
+
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    setEditFormError("");
+    setEditFormSuccess("");
+    setEditFormLoading(true);
+
+    try {
+      if (!editUser.displayName || !editUser.email) {
+        setEditFormError("Name and email are required.");
+        setEditFormLoading(false);
+        return;
+      }
+
+      // Call appropriate API based on user type
+      if (editUser.userType === "designer") {
+        await api.updateProject(editUser.id, {
+          name: editUser.displayName,
+          email: editUser.email,
+          phone: editUser.phone,
+          address: editUser.address,
+        });
+        setEditFormSuccess("Designer updated successfully!");
+      } else if (editUser.userType === "vendor") {
+        await api.updateProject(editUser.id, {
+          company_name: editUser.company_name,
+          name: editUser.displayName,
+          email: editUser.email,
+          phone: editUser.phone,
+          address: editUser.address,
+        });
+        setEditFormSuccess("Vendor updated successfully!");
+      } else if (editUser.userType === "client") {
+        await api.updateProject(editUser.id, {
+          name: editUser.displayName,
+          email: editUser.email,
+          phone: editUser.phone,
+          address: editUser.address,
+        });
+        setEditFormSuccess("Client updated successfully!");
+      }
+
+      setShowEditModal(false);
+      // Optionally refresh users here
+    } catch (err) {
+      setEditFormError(err.message || "Failed to update user.");
+    } finally {
+      setEditFormLoading(false);
+    }
+  };
+
+  // --- DELETE HANDLERS ---
+  const handleDeleteClick = (user) => {
+    setDeleteUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteUser) return;
+    try {
+      // Call appropriate API based on user type
+      if (deleteUser.userType === "designer") {
+        await api.deleteDesigner(deleteUser.id);
+        setDesigners((prev) => prev.filter((d) => d.id !== deleteUser.id));
+      } else if (deleteUser.userType === "vendor") {
+        await api.deleteVendor(deleteUser.id);
+        setVendors((prev) => prev.filter((v) => v.id !== deleteUser.id));
+      } else if (deleteUser.userType === "client") {
+        await api.deleteClient(deleteUser.id);
+        setClients((prev) => prev.filter((c) => c.id !== deleteUser.id));
+      }
+    } catch (err) {
+      alert("Failed to delete user.");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteUser(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeleteUser(null);
+  };
+
   if (loading) {
     return <div className="text-center py-5">Loading users...</div>;
   }
@@ -516,6 +622,155 @@ function AdminUsers({ userId, role }) {
         </div>
       )}
 
+      {/* Edit User Modal */}
+      {showEditModal && editUser && (
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ background: "rgba(0,0,0,0.3)" }}
+        >
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Edit{" "}
+                  {editUser.userType.charAt(0).toUpperCase() +
+                    editUser.userType.slice(1)}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowEditModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <form onSubmit={handleEditUser}>
+                  {editUser.userType === "vendor" && (
+                    <div className="mb-3">
+                      <label className="form-label">Company Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="company_name"
+                        value={editUser.company_name || ""}
+                        onChange={handleEditInputChange}
+                        required
+                      />
+                    </div>
+                  )}
+                  <div className="mb-3">
+                    <label className="form-label">Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="displayName"
+                      value={editUser.displayName || ""}
+                      onChange={handleEditInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      name="email"
+                      value={editUser.email || ""}
+                      onChange={handleEditInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Phone</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="phone"
+                      value={editUser.phone || ""}
+                      onChange={handleEditInputChange}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="address"
+                      value={editUser.address || ""}
+                      onChange={handleEditInputChange}
+                    />
+                  </div>
+                  {editFormError && (
+                    <div className="alert alert-danger">{editFormError}</div>
+                  )}
+                  {editFormSuccess && (
+                    <div className="alert alert-success">{editFormSuccess}</div>
+                  )}
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowEditModal(false)}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={editFormLoading}
+                    >
+                      {editFormLoading ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deleteUser && (
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ background: "rgba(0,0,0,0.3)" }}
+        >
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Delete</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCancelDelete}
+                ></button>
+              </div>
+              <div className="modal-body">
+                Are you sure you want to delete this user? This action cannot be
+                undone.
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleCancelDelete}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={handleConfirmDelete}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Users Table */}
       <div className="card shadow-sm">
         <div className="table-responsive">
@@ -556,11 +811,17 @@ function AdminUsers({ userId, role }) {
                     </td>
                     <td>
                       <div className="d-flex gap-2">
-                        <button className="btn btn-sm btn-outline-primary">
-                          <FiEdit size={16} />
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleEditClick(user)}
+                        >
+                          <FiEdit size={20} />
                         </button>
-                        <button className="btn btn-sm btn-outline-danger">
-                          <FiTrash2 size={16} />
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDeleteClick(user)}
+                        >
+                          <FiTrash2 size={20} />
                         </button>
                       </div>
                     </td>

@@ -358,6 +358,22 @@ const api = {
     }
   },
 
+  // Delete a project by ID
+  deleteProject: async (projectId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/projects/${projectId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete project");
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      throw error;
+    }
+  },
+
   // Add a new client
   addClient: async (clientData) => {
     try {
@@ -422,6 +438,54 @@ const api = {
       return await response.json();
     } catch (error) {
       console.error("Error fetching vendors:", error);
+      throw error;
+    }
+  },
+
+  // Delete a designer by ID
+  deleteDesigner: async (designerId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/designers/${designerId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete designer");
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting designer:", error);
+      throw error;
+    }
+  },
+
+  // Delete a vendor by ID
+  deleteVendor: async (vendorId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/vendors/${vendorId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete vendor");
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting vendor:", error);
+      throw error;
+    }
+  },
+
+  // Delete a client by ID
+  deleteClient: async (clientId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/clients/${clientId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete client");
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting client:", error);
       throw error;
     }
   },

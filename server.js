@@ -202,6 +202,69 @@ app.patch("/projects/:id", async (req, res) => {
   }
 });
 
+app.delete("/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = client.db("Interiora");
+    const result = await db.collection("projects").deleteOne({ id: id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    res.json({ success: true, message: "Project deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting project:", err);
+    res.status(500).json({ error: "Error deleting project" });
+  }
+});
+
+// Delete a designer by ID
+app.delete("/designers/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = client.db("Interiora");
+    const result = await db.collection("designers").deleteOne({ id: id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Designer not found" });
+    }
+    res.json({ success: true, message: "Designer deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting designer:", err);
+    res.status(500).json({ error: "Error deleting designer" });
+  }
+});
+
+// Delete a vendor by ID
+app.delete("/vendors/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = client.db("Interiora");
+    const result = await db.collection("vendors").deleteOne({ id: id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+    res.json({ success: true, message: "Vendor deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting vendor:", err);
+    res.status(500).json({ error: "Error deleting vendor" });
+  }
+});
+
+// Delete a client by ID
+app.delete("/clients/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = client.db("Interiora");
+    const result = await db.collection("clients").deleteOne({ id: id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+    res.json({ success: true, message: "Client deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting client:", err);
+    res.status(500).json({ error: "Error deleting client" });
+  }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);

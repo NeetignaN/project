@@ -4,7 +4,14 @@ import { FiCalendar, FiClock, FiDollarSign, FiPlus, FiX } from "react-icons/fi";
 import styles from "./ProjectDetails.module.css";
 import api from "../services/api";
 
-function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
+function ProjectDetails({
+  project,
+  client,
+  onClose,
+  show,
+  onProjectUpdate,
+  readOnly = false,
+}) {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ ...project });
   const [moodboardUrls, setMoodboardUrls] = useState(project.moodboard || []);
@@ -124,6 +131,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
               name="title"
               value={formData.title}
               onChange={handleChange}
+              disabled={readOnly}
             />
           ) : (
             project.title
@@ -151,6 +159,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
                     name="budget"
                     value={formData.budget}
                     onChange={handleChange}
+                    disabled={readOnly}
                   />
                 ) : (
                   <span>Budget: ${project.budget?.toLocaleString() || 0}</span>
@@ -171,6 +180,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
                         : ""
                     }
                     onChange={handleChange}
+                    disabled={readOnly}
                   />
                 ) : (
                   <span>Start Date: {formatDate(project.timeline?.start)}</span>
@@ -192,6 +202,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
                           : ""
                       }
                       onChange={handleChange}
+                      disabled={readOnly}
                     />
                   ) : (
                     <span>
@@ -223,7 +234,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
                 </small>
                 <small>{progress}%</small>
               </div>
-              {editMode ? (
+              {editMode && !readOnly ? (
                 <Form.Range
                   min={0}
                   max={100}
@@ -247,7 +258,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
             </div>
 
             <h5 className="mb-3 mt-4">Notes</h5>
-            {editMode ? (
+            {editMode && !readOnly ? (
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -269,7 +280,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
                 <div className={styles.moodboardGrid}>
                   {moodboardUrls.map((url, index) => (
                     <div key={index} className={styles.moodboardImageWrapper}>
-                      {editMode && (
+                      {editMode && !readOnly && (
                         <Button
                           variant="danger"
                           size="sm"
@@ -301,7 +312,7 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
               )}
             </div>
 
-            {editMode && (
+            {editMode && !readOnly && (
               <div className="mt-3">
                 <Form.Group className="d-flex">
                   <Form.Control
@@ -324,17 +335,18 @@ function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
-          {editMode ? "Cancel" : "Close"}
+          Close
         </Button>
-        {editMode ? (
-          <Button variant="success" onClick={handleSave}>
-            Save Changes
-          </Button>
-        ) : (
-          <Button variant="primary" onClick={() => setEditMode(true)}>
-            Edit Project
-          </Button>
-        )}
+        {!readOnly &&
+          (editMode ? (
+            <Button variant="success" onClick={handleSave}>
+              Save Changes
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={() => setEditMode(true)}>
+              Edit Project
+            </Button>
+          ))}
       </Modal.Footer>
     </Modal>
   );

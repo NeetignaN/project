@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { useAdminData } from "../contexts/AdminDataContext";
 import {
   FiSearch,
-  FiFilter,
   FiEye,
-  FiEdit,
   FiTrash2,
   FiCalendar,
   FiDollarSign,
@@ -12,6 +10,8 @@ import {
 } from "react-icons/fi";
 import styles from "./Projects.module.css";
 import api from "../services/api.js";
+import ProjectDetails from "./ProjectDetails";
+import { Modal as BootstrapModal } from "react-bootstrap";
 
 function AdminProjects({ userId, role }) {
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,49 @@ function AdminProjects({ userId, role }) {
   const [totalPages, setTotalPages] = useState(1);
   const projectsPerPage = 10;
 
+  // Modal state for project details
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  // State for delete confirmation
+  const [deleteProjectId, setDeleteProjectId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleViewDetails = (project) => {
+    setSelectedProject(project);
+    setShowDetailsModal(true);
+  };
+
+  const handleCloseDetails = () => {
+    setShowDetailsModal(false);
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (projectId) => {
+    setDeleteProjectId(projectId);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await api.deleteProject(deleteProjectId);
+      setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
+      setDisplayedProjects((prev) =>
+        prev.filter((p) => p.id !== deleteProjectId)
+      );
+    } catch (err) {
+      alert("Failed to delete project.");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteProjectId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeleteProjectId(null);
+  };
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -39,12 +82,10 @@ function AdminProjects({ userId, role }) {
         const projectsData = await api.getData("projects");
         const data = await api.getUserData(userId, role);
 
-        // Save data to context
         setProjects(projectsData || []);
         setClients(data.clients || []);
         setDesigners(data.designers || []);
 
-        // Process projects for display
         processProjects(
           projectsData,
           data.clients,
@@ -59,7 +100,6 @@ function AdminProjects({ userId, role }) {
       }
     };
 
-    // Only fetch if we don't already have data
     if (
       projects.length === 0 ||
       clients.length === 0 ||
@@ -70,6 +110,7 @@ function AdminProjects({ userId, role }) {
       setLoading(false);
       processProjects(projects, clients, designers, searchTerm, statusFilter);
     }
+    // eslint-disable-next-line
   }, [
     userId,
     role,
@@ -81,9 +122,9 @@ function AdminProjects({ userId, role }) {
     setDesigners,
   ]);
 
-  // Process and filter projects whenever searchTerm or statusFilter changes
   useEffect(() => {
     processProjects(projects, clients, designers, searchTerm, statusFilter);
+    // eslint-disable-next-line
   }, [searchTerm, statusFilter, projects, clients, designers]);
 
   const processProjects = (
@@ -95,12 +136,10 @@ function AdminProjects({ userId, role }) {
   ) => {
     let filtered = [...allProjects];
 
-    // Apply status filter
     if (filter !== "all") {
       filtered = filtered.filter((project) => project.status === filter);
     }
 
-    // Apply search filter
     if (search) {
       const lowercaseSearch = search.toLowerCase();
       filtered = filtered.filter((project) => {
@@ -118,17 +157,14 @@ function AdminProjects({ userId, role }) {
       });
     }
 
-    // Calculate pagination
     const totalResults = filtered.length;
     const calculatedTotalPages = Math.ceil(totalResults / projectsPerPage);
     setTotalPages(calculatedTotalPages || 1);
 
-    // Adjust current page if needed
     if (currentPage > calculatedTotalPages) {
       setCurrentPage(1);
     }
 
-    // Get projects for current page
     const startIndex = (currentPage - 1) * projectsPerPage;
     const paginatedProjects = filtered.slice(
       startIndex,
@@ -141,15 +177,12 @@ function AdminProjects({ userId, role }) {
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
 
-    // Recalculate displayed projects for the new page
     let filtered = [...projects];
 
-    // Apply status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((project) => project.status === statusFilter);
     }
 
-    // Apply search filter
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter((project) => {
@@ -167,7 +200,6 @@ function AdminProjects({ userId, role }) {
       });
     }
 
-    // Get projects for new page
     const startIndex = (newPage - 1) * projectsPerPage;
     const paginatedProjects = filtered.slice(
       startIndex,
@@ -177,7 +209,6 @@ function AdminProjects({ userId, role }) {
     setDisplayedProjects(paginatedProjects);
   };
 
-  // Helper function to get client name
   const getClientName = (clientId, allClients) => {
     const client = allClients.find((c) => c.id === clientId);
     return client
@@ -185,16 +216,13 @@ function AdminProjects({ userId, role }) {
       : "Unknown Client";
   };
 
-  // Helper function to get designer name
   const getDesignerName = (designerId, allDesigners) => {
     const designer = allDesigners.find((d) => d.id === designerId);
     return designer ? designer.name || "Unknown Designer" : "Unknown Designer";
   };
 
-  // Helper function for date formatting
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -202,7 +230,6 @@ function AdminProjects({ userId, role }) {
     });
   };
 
-  // Helper function to get status badge class
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case "completed":
@@ -354,20 +381,16 @@ function AdminProjects({ userId, role }) {
                         <button
                           className="btn btn-sm btn-outline-info"
                           title="View Details"
+                          onClick={() => handleViewDetails(project)}
                         >
                           <FiEye size={16} />
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-primary"
-                          title="Edit Project"
-                        >
-                          <FiEdit size={16} />
-                        </button>
-                        <button
                           className="btn btn-sm btn-outline-danger"
                           title="Delete Project"
+                          onClick={() => handleDeleteClick(project.id)}
                         >
-                          <FiTrash2 size={16} />
+                          <FiTrash2 size={20} />
                         </button>
                       </div>
                     </td>
@@ -429,6 +452,41 @@ function AdminProjects({ userId, role }) {
           </div>
         )}
       </div>
+
+      {/* Project Details Modal */}
+      {selectedProject && (
+        <ProjectDetails
+          project={selectedProject}
+          client={clients.find((c) => c.id === selectedProject.client_id)}
+          show={showDetailsModal}
+          onClose={handleCloseDetails}
+          onProjectUpdate={() => {}}
+          readOnly={true}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <BootstrapModal
+        show={showDeleteModal}
+        onHide={handleCancelDelete}
+        centered
+      >
+        <BootstrapModal.Header closeButton>
+          <BootstrapModal.Title>Confirm Delete</BootstrapModal.Title>
+        </BootstrapModal.Header>
+        <BootstrapModal.Body>
+          Are you sure you want to delete this project? This action cannot be
+          undone.
+        </BootstrapModal.Body>
+        <BootstrapModal.Footer>
+          <button className="btn btn-secondary" onClick={handleCancelDelete}>
+            Cancel
+          </button>
+          <button className="btn btn-danger" onClick={handleConfirmDelete}>
+            Delete
+          </button>
+        </BootstrapModal.Footer>
+      </BootstrapModal>
     </div>
   );
 }
