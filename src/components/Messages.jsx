@@ -61,6 +61,7 @@ function Messages({ username, role, userId }) {
     }
   }, [location, navigate, conversations, userId, isLoading]);
 
+  // FIX: Only depend on userId and role to avoid infinite loop
   useEffect(() => {
     const fetchDesignerConvos = async () => {
       try {
@@ -83,7 +84,7 @@ function Messages({ username, role, userId }) {
     };
 
     fetchDesignerConvos();
-  }, [userId, role, conversations, setConversations]);
+  }, [userId, role]);
 
   // Apply filters when filter type or value changes
   useEffect(() => {
@@ -314,9 +315,10 @@ function Messages({ username, role, userId }) {
           </div>
 
           <div className={styles.conversationsList}>
-            {filteredConversations.length === 0 ? (
+            {filteredConversations && filteredConversations.length === 0 ? (
               <div className={styles.noResults}>No conversations found</div>
             ) : (
+              filteredConversations &&
               filteredConversations.map((conversation) => {
                 const lastMessage =
                   conversation.messages[conversation.messages.length - 1];

@@ -12,15 +12,11 @@ function Projects({ username, role, userId }) {
   const { projects, clients, setProjects } = useDesignerData();
   const location = useLocation();
   const navigate = useNavigate();
-  console.log("Projects in Projects Component:", projects);
-  console.log("Clients in Projects Component:", clients);
 
-  // State for the project details modal
   const [selectedProject, setSelectedProject] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // State for the new project form
   const [newProject, setNewProject] = useState({
     title: "",
     client_id: "",
@@ -37,18 +33,57 @@ function Projects({ username, role, userId }) {
 
   const [imageUrl, setImageUrl] = useState("");
 
-  // Function to handle opening the project details
+  const getClient = (clientId) => {
+    return clients.find((c) => c.id === clientId) || { name: "Unknown Client" };
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case "completed":
+        return "bg-success";
+      case "active":
+        return "bg-primary";
+      default:
+        return "bg-secondary";
+    }
+  };
+
+  const getClientName = (clientId) => {
+    const client = clients.find((c) => c.id === clientId);
+    return client?.name || "Unknown Client";
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not set";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getProjectImage = (project) => {
+    if (project.moodboard && project.moodboard.length > 0) {
+      return project.moodboard[0];
+    }
+    return "https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80";
+  };
+
   const handleViewDetails = (project) => {
     setSelectedProject(project);
     setShowDetailsModal(true);
   };
 
-  // Function to handle closing the project details
+  const handleProjectUpdate = (updatedProject) => {
+    setProjects(
+      projects.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+    );
+  };
+
   const handleCloseDetails = () => {
     setShowDetailsModal(false);
   };
 
-  // Function to handle form changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -69,7 +104,6 @@ function Projects({ username, role, userId }) {
     }
   };
 
-  // Function to add an image to the moodboard
   const handleAddImage = () => {
     if (imageUrl.trim() !== "") {
       setNewProject({
@@ -80,7 +114,6 @@ function Projects({ username, role, userId }) {
     }
   };
 
-  // Function to remove an image from the moodboard
   const handleRemoveImage = (index) => {
     const updatedMoodboard = [...newProject.moodboard];
     updatedMoodboard.splice(index, 1);
@@ -90,24 +123,19 @@ function Projects({ username, role, userId }) {
     });
   };
 
-  // Function to handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Format budget as a number
       const formattedProject = {
         ...newProject,
         budget: parseFloat(newProject.budget),
       };
 
-      // Add project to API
       const response = await api.addProject(formattedProject);
 
-      // Add project to local state
       setProjects([...projects, response.data]);
 
-      // Close modal and reset form
       setShowAddModal(false);
       setNewProject({
         title: "",
@@ -124,18 +152,15 @@ function Projects({ username, role, userId }) {
       });
     } catch (error) {
       console.error("Error adding project:", error);
-      // Here you would typically show an error message to the user
     }
   };
 
-  // Check if there's a project ID in the location state and open the modal
   useEffect(() => {
     if (location.state?.projectId) {
       const project = projects.find((p) => p.id === location.state.projectId);
       if (project) {
         setSelectedProject(project);
         setShowDetailsModal(true);
-        // Clear the location state to avoid reopening modal on refresh
         navigate(location.pathname, { replace: true });
       }
     }
@@ -160,8 +185,6 @@ function Projects({ username, role, userId }) {
           </div>
         </div>
         <div className="alert alert-info m-3">No projects found.</div>
-
-        {/* Add Project Modal */}
         <AddProjectModal
           show={showAddModal}
           onHide={() => setShowAddModal(false)}
@@ -177,55 +200,6 @@ function Projects({ username, role, userId }) {
       </div>
     );
   }
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "completed":
-        return "bg-success";
-      case "active":
-        return "bg-primary";
-      default:
-        return "bg-secondary";
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "completed":
-        return "Completed";
-      case "active":
-        return "In Progress";
-      default:
-        return "Pending";
-    }
-  };
-
-  const getClientName = (clientId) => {
-    const client = clients.find((c) => c.id === clientId);
-    return client?.name || "Unknown Client";
-  };
-
-  const getClient = (clientId) => {
-    return clients.find((c) => c.id === clientId) || { name: "Unknown Client" };
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Not set";
-
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  // Default image if project doesn't have a moodboard
-  const getProjectImage = (project) => {
-    if (project.moodboard && project.moodboard.length > 0) {
-      return project.moodboard[0];
-    }
-    return "https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80";
-  };
 
   return (
     <div className="container-fluid py-4">
@@ -247,18 +221,12 @@ function Projects({ username, role, userId }) {
 
       <div className="row g-4">
         {projects.map((project) => {
-          // Calculate progress percentage
-          let progress = 0;
-
-          if (project.status === "completed") {
-            progress = 100;
-          } else if (
-            project.status === "in_progress" ||
-            project.status === "active"
-          ) {
-            // Mock value, would be calculated based on timeline/tasks
-            progress = 30;
-          }
+          let progress =
+            typeof project.progress === "number"
+              ? project.progress
+              : project.status === "completed"
+              ? 100
+              : 0;
 
           return (
             <div key={project.id} className="col-md-6 col-lg-4">
@@ -274,7 +242,11 @@ function Projects({ username, role, userId }) {
                       project.status
                     )}`}
                   >
-                    {getStatusLabel(project.status)}
+                    {progress === 100
+                      ? "Completed"
+                      : progress === 0
+                      ? "Pending"
+                      : "In Progress"}
                   </span>
                 </div>
                 <div className="card-body">
@@ -306,28 +278,31 @@ function Projects({ username, role, userId }) {
                     )}
                   </div>
 
-                  {project.status !== "pending" && (
-                    <div className={styles.progressWrapper}>
-                      <div className="d-flex justify-content-between mb-1">
-                        <small>Progress</small>
-                        <small>{progress}%</small>
-                      </div>
-                      <div className="progress" style={{ height: "6px" }}>
-                        <div
-                          className={`progress-bar ${
-                            project.status === "completed"
-                              ? "bg-success"
-                              : "bg-primary"
-                          }`}
-                          role="progressbar"
-                          style={{ width: `${progress}%` }}
-                          aria-valuenow={progress}
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                        ></div>
-                      </div>
+                  {/* Always show progress bar */}
+                  <div className={styles.progressWrapper}>
+                    <div className="d-flex justify-content-between mb-1">
+                      <small>
+                        {progress === 100
+                          ? "Completed"
+                          : progress === 0
+                          ? "Pending"
+                          : "In Progress"}
+                      </small>
+                      <small>{progress}%</small>
                     </div>
-                  )}
+                    <div className="progress" style={{ height: "6px" }}>
+                      <div
+                        className={`progress-bar ${
+                          progress === 100 ? "bg-success" : "bg-primary"
+                        }`}
+                        role="progressbar"
+                        style={{ width: `${progress}%` }}
+                        aria-valuenow={progress}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div>
+                  </div>
                 </div>
                 <div className="card-footer bg-white border-top-0">
                   <button
@@ -343,17 +318,16 @@ function Projects({ username, role, userId }) {
         })}
       </div>
 
-      {/* Project Details Modal */}
       {selectedProject && (
         <ProjectDetails
           project={selectedProject}
           client={getClient(selectedProject.client_id)}
           show={showDetailsModal}
           onClose={handleCloseDetails}
+          onProjectUpdate={handleProjectUpdate}
         />
       )}
 
-      {/* Add Project Modal */}
       <AddProjectModal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
@@ -370,7 +344,6 @@ function Projects({ username, role, userId }) {
   );
 }
 
-// Component for the Add Project Modal
 function AddProjectModal({
   show,
   onHide,

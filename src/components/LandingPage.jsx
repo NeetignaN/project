@@ -7,9 +7,9 @@ function LandingPage() {
     <div className={styles.container}>
       <div className={styles.content}>
         <h1 className={styles.title}>Welcome to Interiora</h1>
-        <p className={styles.description}>
+        {/* <p className={styles.description}>
           A simple React application with role-based authentication.
-        </p>
+        </p> */}
         <Link to="/login" className={styles.button}>
           Sign In
         </Link>

@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
+import { ObjectId } from "mongodb";
 
 dotenv.config();
 
@@ -160,6 +161,44 @@ app.patch("/designers/:designerId/vendor-connections", async (req, res) => {
   } catch (err) {
     console.error("❌ Error updating vendor connections:", err);
     res.status(500).json({ error: "Error updating vendor connections" });
+  }
+});
+
+// Helper to recursively remove all _id fields
+function removeMongoId(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(removeMongoId);
+  } else if (obj && typeof obj === "object") {
+    const newObj = {};
+    for (const key in obj) {
+      if (key !== "_id") {
+        newObj[key] = removeMongoId(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+}
+
+app.patch("/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  let updateData = removeMongoId(req.body);
+
+  try {
+    const db = client.db("Interiora");
+    const result = await db
+      .collection("projects")
+      .updateOne({ id: id }, { $set: updateData });
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ error: "Project not found or no change" });
+    }
+
+    const updated = await db.collection("projects").findOne({ id });
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Error updating project:", err);
+    res.status(500).json({ error: "Error updating project" });
   }
 });
 

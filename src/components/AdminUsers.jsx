@@ -7,6 +7,7 @@ import {
   FiShoppingBag,
   FiEdit,
   FiTrash2,
+  FiPlus,
 } from "react-icons/fi";
 import styles from "./Clients.module.css";
 import api from "../services/api.js";
@@ -22,6 +23,22 @@ function AdminUsers({ userId, role }) {
   const [totalPages, setTotalPages] = useState(1);
   const usersPerPage = 10;
 
+  // Modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Form state for new designer/vendor
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    address: "",
+    company_name: "",
+  });
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -29,12 +46,10 @@ function AdminUsers({ userId, role }) {
 
         const data = await api.getUserData(userId, role);
 
-        // Save data to context
         setClients(data.clients || []);
         setDesigners(data.designers || []);
         setVendors(data.vendors || []);
 
-        // Process users for display
         const allUsers = {
           clients: data.clients || [],
           designers: data.designers || [],
@@ -48,7 +63,6 @@ function AdminUsers({ userId, role }) {
       }
     };
 
-    // Only fetch if we don't already have data
     if (
       clients.length === 0 ||
       designers.length === 0 ||
@@ -75,7 +89,6 @@ function AdminUsers({ userId, role }) {
     setVendors,
   ]);
 
-  // Process and filter users whenever searchTerm or userTypeFilter changes
   useEffect(() => {
     const allUsers = {
       clients,
@@ -88,7 +101,6 @@ function AdminUsers({ userId, role }) {
   const processUsers = (users, search, filter) => {
     let combined = [];
 
-    // Add clients
     if (filter === "all" || filter === "clients") {
       const processedClients = users.clients.map((client) => ({
         ...client,
@@ -101,7 +113,6 @@ function AdminUsers({ userId, role }) {
       combined = [...combined, ...processedClients];
     }
 
-    // Add designers
     if (filter === "all" || filter === "designers") {
       const processedDesigners = users.designers.map((designer) => ({
         ...designer,
@@ -114,12 +125,11 @@ function AdminUsers({ userId, role }) {
       combined = [...combined, ...processedDesigners];
     }
 
-    // Add vendors
     if (filter === "all" || filter === "vendors") {
       const processedVendors = users.vendors.map((vendor) => ({
         ...vendor,
         userType: "vendor",
-        displayName: vendor.contact || "Unknown Vendor",
+        displayName: vendor.company_name || "Unknown Vendor",
         email: vendor.email || "N/A",
         phone: vendor.phone || "N/A",
         address: vendor.address || "N/A",
@@ -127,7 +137,6 @@ function AdminUsers({ userId, role }) {
       combined = [...combined, ...processedVendors];
     }
 
-    // Apply search filter
     if (search) {
       const lowercaseSearch = search.toLowerCase();
       combined = combined.filter((user) => {
@@ -142,17 +151,14 @@ function AdminUsers({ userId, role }) {
       });
     }
 
-    // Calculate pagination
     const totalResults = combined.length;
     const calculatedTotalPages = Math.ceil(totalResults / usersPerPage);
     setTotalPages(calculatedTotalPages || 1);
 
-    // Adjust current page if needed
     if (currentPage > calculatedTotalPages) {
       setCurrentPage(1);
     }
 
-    // Get users for current page
     const startIndex = (currentPage - 1) * usersPerPage;
     const paginatedUsers = combined.slice(
       startIndex,
@@ -165,7 +171,6 @@ function AdminUsers({ userId, role }) {
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
 
-    // Recalculate displayed users for the new page
     const startIndex = (newPage - 1) * usersPerPage;
     let combined = [];
 
@@ -245,6 +250,66 @@ function AdminUsers({ userId, role }) {
     }
   };
 
+  // --- FORM HANDLERS ---
+  const handleInputChange = (e) => {
+    setNewUser({ ...newUser, [e.target.name]: e.target.value });
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    setFormSuccess("");
+    setFormLoading(true);
+
+    try {
+      if (!newUser.name || !newUser.email || !newUser.password) {
+        setFormError("Name, email, and password are required.");
+        setFormLoading(false);
+        return;
+      }
+
+      if (userTypeFilter === "designers") {
+        await api.registerDesigner(
+          {
+            name: newUser.name,
+            email: newUser.email,
+            phone: newUser.phone,
+            address: newUser.address,
+          },
+          newUser.password
+        );
+        setFormSuccess("Designer created successfully!");
+      } else if (userTypeFilter === "vendors") {
+        await api.registerVendor(
+          {
+            company_name: newUser.company_name,
+            name: newUser.name,
+            email: newUser.email,
+            phone: newUser.phone,
+            address: newUser.address,
+          },
+          newUser.password
+        );
+        setFormSuccess("Vendor created successfully!");
+      }
+
+      setNewUser({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+        address: "",
+        company_name: "",
+      });
+      setShowCreateModal(false);
+      // Optionally refresh users here
+    } catch (err) {
+      setFormError(err.message || "Failed to create user.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-5">Loading users...</div>;
   }
@@ -253,9 +318,10 @@ function AdminUsers({ userId, role }) {
     <div className="container-fluid py-4">
       <h1 className="h3 mb-4">User Management</h1>
 
-      {/* Filters and Search Bar */}
-      <div className="row mb-4">
-        <div className="col-md-6 mb-3 mb-md-0">
+      {/* Filters, Create Button, and Search Bar */}
+      <div className="row mb-4 align-items-center">
+        {/* Filters */}
+        <div className="col-md-4 mb-3 mb-md-0">
           <div className="btn-group" role="group">
             <button
               className={`btn ${
@@ -297,7 +363,25 @@ function AdminUsers({ userId, role }) {
             </button>
           </div>
         </div>
-        <div className="col-md-6">
+
+        {/* Create Button */}
+        <div className="col-md-3 mb-3 mb-md-0 d-flex justify-content-center">
+          {(userTypeFilter === "designers" || userTypeFilter === "vendors") && (
+            <button
+              className="btn btn-success"
+              onClick={() => setShowCreateModal(true)}
+              type="button"
+            >
+              <FiPlus />{" "}
+              {userTypeFilter === "designers"
+                ? "Create Designer"
+                : "Create Vendor"}
+            </button>
+          )}
+        </div>
+
+        {/* Search Bar */}
+        <div className="col-md-5">
           <div className="input-group">
             <span className="input-group-text">
               <FiSearch />
@@ -312,6 +396,125 @@ function AdminUsers({ userId, role }) {
           </div>
         </div>
       </div>
+
+      {/* Modal for creating designer/vendor */}
+      {showCreateModal && (
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ background: "rgba(0,0,0,0.3)" }}
+        >
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  {userTypeFilter === "designers"
+                    ? "Create Designer"
+                    : "Create Vendor"}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowCreateModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <form onSubmit={handleCreateUser}>
+                  {userTypeFilter === "vendors" && (
+                    <div className="mb-3">
+                      <label className="form-label">Company Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="company_name"
+                        value={newUser.company_name}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  )}
+                  <div className="mb-3">
+                    <label className="form-label">Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="name"
+                      value={newUser.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      name="email"
+                      value={newUser.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Password</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      name="password"
+                      value={newUser.password}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Phone</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="phone"
+                      value={newUser.phone}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="address"
+                      value={newUser.address}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {formError && (
+                    <div className="alert alert-danger">{formError}</div>
+                  )}
+                  {formSuccess && (
+                    <div className="alert alert-success">{formSuccess}</div>
+                  )}
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowCreateModal(false)}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={formLoading}
+                    >
+                      {formLoading ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Users Table */}
       <div className="card shadow-sm">

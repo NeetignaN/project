@@ -55,24 +55,43 @@ function DesignerDashboard({ userDetails, userId, role }) {
   // Calculate summary statistics
   const projectCount = projects?.length || 0;
   const clientCount = clients?.length || 0;
+
+  // --- Dynamic Upcoming Deadlines (next 30 days) ---
+  const now = new Date();
+  const in30Days = new Date();
+  in30Days.setDate(now.getDate() + 30);
+
   const upcomingDeadlines =
     projects?.filter(
       (project) =>
-        project.status === "active" && project.timeline?.estimated_end
+        project.status === "active" &&
+        project.timeline?.estimated_end &&
+        new Date(project.timeline.estimated_end) >= now &&
+        new Date(project.timeline.estimated_end) <= in30Days
     ).length || 0;
-  const monthlyAppointments = 18; // This would be calculated from actual data
+
+  // --- Dynamic Monthly Appointments ---
+  // Assumes each project has an array: project.appointments = [{ date: "YYYY-MM-DD", ... }]
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthlyAppointments =
+    projects
+      ?.flatMap((project) => project.appointments || [])
+      .filter((appt) => {
+        if (!appt.date) return false;
+        const date = new Date(appt.date);
+        return (
+          date.getMonth() === currentMonth && date.getFullYear() === currentYear
+        );
+      }).length || 0;
 
   // Filter active projects
   const activeProjects =
     projects?.filter((project) => project.status === "active").slice(0, 4) ||
     [];
-  console.log(activeProjects);
-  console.log(projects);
-
   // Filter recent clients
   const recentClients = clients?.slice(0, 4) || [];
-  console.log(clients);
-  console.log(recentClients);
 
   if (loading) {
     return <div className={styles.loading}>Loading dashboard...</div>;
@@ -153,11 +172,21 @@ function DesignerDashboard({ userDetails, userId, role }) {
 
       {/* Action Buttons */}
       <div className={styles.actionButtons}>
-        <button className={styles.newProjectBtn}>
+        <button
+          className={styles.newProjectBtn}
+          onClick={() =>
+            navigate("/designer/projects", { state: { openAddModal: true } })
+          }
+        >
           <FiPlus />
           New Project
         </button>
-        <button className={styles.addClientBtn}>
+        <button
+          className={styles.addClientBtn}
+          onClick={() =>
+            navigate("/designer/clients", { state: { openAddModal: true } })
+          }
+        >
           <FiUser />
           Add Client
         </button>

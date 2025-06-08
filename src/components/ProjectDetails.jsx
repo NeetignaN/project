@@ -1,15 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button, Row, Col, Badge, Form } from "react-bootstrap";
 import { FiCalendar, FiClock, FiDollarSign, FiPlus, FiX } from "react-icons/fi";
 import styles from "./ProjectDetails.module.css";
+import api from "../services/api";
 
-function ProjectDetails({ project, client, onClose, show }) {
+function ProjectDetails({ project, client, onClose, show, onProjectUpdate }) {
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({ ...project });
   const [moodboardUrls, setMoodboardUrls] = useState(project.moodboard || []);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [progress, setProgress] = useState(
+    project.status === "completed" ? 100 : project.progress ?? 30
+  );
+
+  useEffect(() => {
+    setFormData({ ...project });
+    setMoodboardUrls(project.moodboard || []);
+    setProgress(project.status === "completed" ? 100 : project.progress ?? 30);
+    setEditMode(false);
+  }, [project, show]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not set";
-
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -39,13 +51,54 @@ function ProjectDetails({ project, client, onClose, show }) {
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: { ...prev[parent], [child]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleProgressChange = (e) => {
+    const newProgress = Number(e.target.value);
+    setProgress(newProgress);
+    let newStatus = formData.status;
+    if (newProgress === 100) newStatus = "completed";
+    else if (newProgress > 0) newStatus = "active";
+    else newStatus = "pending";
+    setFormData((prev) => ({
+      ...prev,
+      progress: newProgress,
+      status: newStatus,
+    }));
+  };
+
+  const handleSave = async () => {
+    const updatedProject = {
+      ...formData,
+      moodboard: moodboardUrls,
+      budget: parseFloat(formData.budget || 0),
+      progress,
+    };
+    try {
+      const updated = await api.updateProject(project.id, updatedProject);
+      if (onProjectUpdate) onProjectUpdate(updated);
+      setEditMode(false);
+      onClose();
+    } catch (err) {
+      console.error("Failed to update project:", err);
+    }
+  };
+
   const addImage = () => {
     if (newImageUrl && newImageUrl.trim() !== "") {
       setMoodboardUrls([...moodboardUrls, newImageUrl]);
       setNewImageUrl("");
-
-      // In a real implementation, this would be saved to your backend
-      // api.updateProject(project.id, { moodboard: [...moodboardUrls, newImageUrl] });
     }
   };
 
@@ -53,19 +106,7 @@ function ProjectDetails({ project, client, onClose, show }) {
     const updatedUrls = [...moodboardUrls];
     updatedUrls.splice(index, 1);
     setMoodboardUrls(updatedUrls);
-
-    // In a real implementation, this would be saved to your backend
-    // api.updateProject(project.id, { moodboard: updatedUrls });
   };
-
-  // Calculate progress percentage
-  let progress = 0;
-  if (project.status === "completed") {
-    progress = 100;
-  } else if (project.status === "active") {
-    // Mock value, would be calculated based on timeline/tasks
-    progress = 30;
-  }
 
   return (
     <Modal
@@ -77,9 +118,18 @@ function ProjectDetails({ project, client, onClose, show }) {
     >
       <Modal.Header closeButton>
         <Modal.Title>
-          {project.title}
-          <Badge bg={getStatusBadgeClass(project.status)} className="ms-2">
-            {getStatusLabel(project.status)}
+          {editMode ? (
+            <Form.Control
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+            />
+          ) : (
+            project.title
+          )}
+          <Badge bg={getStatusBadgeClass(formData.status)} className="ms-2">
+            {getStatusLabel(formData.status)}
           </Badge>
         </Modal.Title>
       </Modal.Header>
@@ -95,20 +145,59 @@ function ProjectDetails({ project, client, onClose, show }) {
 
               <div className="d-flex align-items-center mb-2">
                 <FiDollarSign className="text-muted me-2" />
-                <span>Budget: ${project.budget?.toLocaleString() || 0}</span>
+                {editMode ? (
+                  <Form.Control
+                    type="number"
+                    name="budget"
+                    value={formData.budget}
+                    onChange={handleChange}
+                  />
+                ) : (
+                  <span>Budget: ${project.budget?.toLocaleString() || 0}</span>
+                )}
               </div>
 
               <div className="d-flex align-items-center mb-2">
                 <FiCalendar className="text-muted me-2" />
-                <span>Start Date: {formatDate(project.timeline?.start)}</span>
+                {editMode ? (
+                  <Form.Control
+                    type="date"
+                    name="timeline.start"
+                    value={
+                      formData.timeline?.start
+                        ? new Date(formData.timeline.start)
+                            .toISOString()
+                            .split("T")[0]
+                        : ""
+                    }
+                    onChange={handleChange}
+                  />
+                ) : (
+                  <span>Start Date: {formatDate(project.timeline?.start)}</span>
+                )}
               </div>
 
               {project.timeline?.estimated_end && (
                 <div className="d-flex align-items-center mb-2">
                   <FiClock className="text-muted me-2" />
-                  <span>
-                    Due Date: {formatDate(project.timeline.estimated_end)}
-                  </span>
+                  {editMode ? (
+                    <Form.Control
+                      type="date"
+                      name="timeline.estimated_end"
+                      value={
+                        formData.timeline?.estimated_end
+                          ? new Date(formData.timeline.estimated_end)
+                              .toISOString()
+                              .split("T")[0]
+                          : ""
+                      }
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    <span>
+                      Due Date: {formatDate(project.timeline.estimated_end)}
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -122,16 +211,30 @@ function ProjectDetails({ project, client, onClose, show }) {
               )}
             </div>
 
-            {project.status !== "pending" && (
-              <div className={styles.progressWrapper}>
-                <div className="d-flex justify-content-between mb-1">
-                  <small>Progress</small>
-                  <small>{progress}%</small>
-                </div>
+            {/* Always show progress bar, editable in edit mode */}
+            <div className={styles.progressWrapper}>
+              <div className="d-flex justify-content-between mb-1">
+                <small>
+                  {progress === 100
+                    ? "Completed"
+                    : progress === 0
+                    ? "Pending"
+                    : "In Progress"}
+                </small>
+                <small>{progress}%</small>
+              </div>
+              {editMode ? (
+                <Form.Range
+                  min={0}
+                  max={100}
+                  value={progress}
+                  onChange={handleProgressChange}
+                />
+              ) : (
                 <div className="progress" style={{ height: "8px" }}>
                   <div
                     className={`progress-bar bg-${getStatusBadgeClass(
-                      project.status
+                      formData.status
                     )}`}
                     role="progressbar"
                     style={{ width: `${progress}%` }}
@@ -140,13 +243,23 @@ function ProjectDetails({ project, client, onClose, show }) {
                     aria-valuemax="100"
                   ></div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <h5 className="mb-3 mt-4">Notes</h5>
-            <p className="text-muted">
-              {project.notes || "No notes have been added to this project."}
-            </p>
+            {editMode ? (
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+              />
+            ) : (
+              <p className="text-muted">
+                {project.notes || "No notes have been added to this project."}
+              </p>
+            )}
           </Col>
           <Col md={6}>
             <h5 className="mb-3">Mood Board</h5>
@@ -156,14 +269,16 @@ function ProjectDetails({ project, client, onClose, show }) {
                 <div className={styles.moodboardGrid}>
                   {moodboardUrls.map((url, index) => (
                     <div key={index} className={styles.moodboardImageWrapper}>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        className={styles.removeImageBtn}
-                        onClick={() => removeImage(index)}
-                      >
-                        <FiX />
-                      </Button>
+                      {editMode && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className={styles.removeImageBtn}
+                          onClick={() => removeImage(index)}
+                        >
+                          <FiX />
+                        </Button>
+                      )}
                       <img
                         src={url}
                         alt={`Reference ${index + 1}`}
@@ -186,30 +301,40 @@ function ProjectDetails({ project, client, onClose, show }) {
               )}
             </div>
 
-            <div className="mt-3">
-              <Form.Group className="d-flex">
-                <Form.Control
-                  type="text"
-                  placeholder="Paste image URL here"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                />
-                <Button variant="primary" className="ms-2" onClick={addImage}>
-                  <FiPlus />
-                </Button>
-              </Form.Group>
-              <Form.Text className="text-muted">
-                Add reference images to create a mood board for this project
-              </Form.Text>
-            </div>
+            {editMode && (
+              <div className="mt-3">
+                <Form.Group className="d-flex">
+                  <Form.Control
+                    type="text"
+                    placeholder="Paste image URL here"
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                  />
+                  <Button variant="primary" className="ms-2" onClick={addImage}>
+                    <FiPlus />
+                  </Button>
+                </Form.Group>
+                <Form.Text className="text-muted">
+                  Add reference images to create a mood board for this project
+                </Form.Text>
+              </div>
+            )}
           </Col>
         </Row>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
-          Close
+          {editMode ? "Cancel" : "Close"}
         </Button>
-        <Button variant="primary">Edit Project</Button>
+        {editMode ? (
+          <Button variant="success" onClick={handleSave}>
+            Save Changes
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={() => setEditMode(true)}>
+            Edit Project
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );

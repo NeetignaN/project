@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import api from "../services/api.js";
 import {
   FiUser,
@@ -27,6 +27,8 @@ function Clients({ username, role, userId }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const hasHandledLocationState = useRef(false);
+
   // State for the new client form
   const [newClient, setNewClient] = useState({
     name: "",
@@ -43,12 +45,20 @@ function Clients({ username, role, userId }) {
 
   // Check if there's a client ID in the location state and open the modal
   useEffect(() => {
-    if (location.state?.clientId) {
-      const client = clients.find((c) => c.id === location.state.clientId);
-      if (client) {
-        setSelectedClient(client);
-        setShowDetailsModal(true);
-        // Clear the location state to avoid reopening modal on refresh
+    if (!hasHandledLocationState.current) {
+      if (location.state?.clientId && clients.length > 0) {
+        const client = clients.find((c) => c.id === location.state.clientId);
+        if (client) {
+          setSelectedClient(client);
+          setShowDetailsModal(true);
+          hasHandledLocationState.current = true;
+          navigate(location.pathname, { replace: true });
+        }
+      }
+
+      if (location.state?.openAddModal) {
+        setShowAddModal(true);
+        hasHandledLocationState.current = true;
         navigate(location.pathname, { replace: true });
       }
     }

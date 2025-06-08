@@ -646,7 +646,7 @@ function Vendors({ username, role, userId }) {
               Select vendors to add to your connections
             </p>
 
-            <Button
+            {/* <Button
               variant="outline-secondary"
               className="mb-3"
               onClick={() => setRefreshing((prev) => !prev)}
@@ -654,7 +654,7 @@ function Vendors({ username, role, userId }) {
             >
               <FiRefreshCw className={refreshing ? "spin-animation" : ""} />
               Refresh List
-            </Button>
+            </Button> */}
 
             {getAvailableVendors().length === 0 ? (
               <div className="alert alert-info">

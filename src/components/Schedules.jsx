@@ -65,7 +65,8 @@ function Schedules({ username, role, userId }) {
     };
 
     fetchDesignerSchedules();
-  }, [userId, role, schedules, setSchedules]);
+    // }, [userId, role, schedules, setSchedules]);
+  }, [userId, role]);
 
   // Handle input change for new schedule form
   const handleInputChange = (e) => {

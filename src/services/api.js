@@ -86,6 +86,58 @@ const api = {
     }
   },
 
+  // Register Designer
+  registerDesigner: async (designerData, password) => {
+    if (!designerData.id) designerData.id = `designer_${Date.now()}`;
+    // 1. Create designer
+    const res = await fetch(`${BASE_URL}/designers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(designerData),
+    });
+    if (!res.ok) throw new Error("Failed to register designer");
+    // 2. Create credentials with name
+    const credRes = await fetch(`${BASE_URL}/credentials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: designerData.id,
+        email: designerData.email,
+        password,
+        role: "designer",
+        name: designerData.name, // Add name here
+      }),
+    });
+    if (!credRes.ok) throw new Error("Failed to create designer credentials");
+    return { success: true, designer: await res.json() };
+  },
+
+  // Register Vendor
+  registerVendor: async (vendorData, password) => {
+    if (!vendorData.id) vendorData.id = `vendor_${Date.now()}`;
+    // 1. Create vendor
+    const res = await fetch(`${BASE_URL}/vendors`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(vendorData),
+    });
+    if (!res.ok) throw new Error("Failed to register vendor");
+    // 2. Create credentials with name
+    const credRes = await fetch(`${BASE_URL}/credentials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: vendorData.id,
+        email: vendorData.email,
+        password,
+        role: "vendor",
+        name: vendorData.name, // Add name here
+      }),
+    });
+    if (!credRes.ok) throw new Error("Failed to create vendor credentials");
+    return { success: true, vendor: await res.json() };
+  },
+
   getData: async (resourceType, id = "") => {
     // Updated path for generic resource
     const path = id
@@ -280,6 +332,28 @@ const api = {
       return await response.json();
     } catch (error) {
       console.error("Error adding project:", error);
+      throw error;
+    }
+  },
+
+  // Updating project details
+  updateProject: async (projectId, updatedData) => {
+    try {
+      const response = await fetch(`${BASE_URL}/projects/${projectId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update project");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating project:", error);
       throw error;
     }
   },
