@@ -166,7 +166,7 @@ function ClientMessages({ username, role, userId }) {
   };
 
   // Handle sending a new message
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!activeConversation || !newMessage.trim()) return;
 
     // Create new message object
@@ -194,6 +194,14 @@ function ClientMessages({ username, role, userId }) {
     setActiveConversation(updatedConversation);
     setConversations(updatedConversations);
     setNewMessage(""); // Clear input
+
+    // Save to DB
+    try {
+      await api.addMessageToConversation(activeConversation.id, newMessageObj);
+    } catch (error) {
+      alert("Failed to send message to server.");
+      console.error(error);
+    }
   };
 
   // Get the project name

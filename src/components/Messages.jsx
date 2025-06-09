@@ -448,9 +448,7 @@ function Messages({ username, role, userId }) {
                   onKeyPress={handleKeyPress}
                 />
                 <div className={styles.messageActions}>
-                  <button className={styles.attachButton}>
-                    <FiPaperclip />
-                  </button>
+                  <button className={styles.attachButton}></button>
                   <button
                     className={styles.sendButton}
                     onClick={handleSendMessage}
