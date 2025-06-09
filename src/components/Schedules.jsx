@@ -140,10 +140,19 @@ function Schedules({ username, role, userId }) {
   };
 
   // Confirm schedule deletion
-  const confirmDeleteSchedule = () => {
-    setSchedules(schedules.filter((s) => s.id !== selectedSchedule.id));
-    setShowDeleteConfirm(false);
-    setSelectedSchedule(null);
+  const confirmDeleteSchedule = async () => {
+    try {
+      // Delete from database
+      await api.deleteSchedule(selectedSchedule.id);
+
+      // Remove from local state
+      setSchedules(schedules.filter((s) => s.id !== selectedSchedule.id));
+      setShowDeleteConfirm(false);
+      setSelectedSchedule(null);
+    } catch (error) {
+      alert("Failed to delete schedule.");
+      console.error(error);
+    }
   };
 
   // Handle input change for edit schedule form
@@ -153,7 +162,7 @@ function Schedules({ username, role, userId }) {
   };
 
   // Save edited schedule
-  const saveEditedSchedule = () => {
+  const saveEditedSchedule = async () => {
     // Validate form
     if (
       !editSchedule.title ||
@@ -164,14 +173,22 @@ function Schedules({ username, role, userId }) {
       return;
     }
 
-    // Update schedule in state
-    setSchedules(
-      schedules.map((s) => (s.id === editSchedule.id ? editSchedule : s))
-    );
+    try {
+      // Update in database
+      await api.updateSchedule(editSchedule.id, editSchedule);
 
-    // Close modal
-    setShowEditModal(false);
-    setEditSchedule(null);
+      // Update schedule in state
+      setSchedules(
+        schedules.map((s) => (s.id === editSchedule.id ? editSchedule : s))
+      );
+
+      // Close modal
+      setShowEditModal(false);
+      setEditSchedule(null);
+    } catch (error) {
+      alert("Failed to update schedule.");
+      console.error(error);
+    }
   };
 
   // Helper function to format date (e.g., "Mon, Mar 31")
@@ -575,6 +592,179 @@ function Schedules({ username, role, userId }) {
       </div>
     );
   };
+
+  function renderAddScheduleModal() {
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modal}>
+          <div className={styles.modalHeader}>
+            <h3>Add New Schedule</h3>
+            <button
+              className={styles.closeButton}
+              onClick={() => setShowAddModal(false)}
+            >
+              <FiX />
+            </button>
+          </div>
+          <div className={styles.modalBody}>
+            <div className={styles.formGroup}>
+              <label>Title*</label>
+              <input
+                type="text"
+                name="title"
+                value={newSchedule.title}
+                onChange={handleInputChange}
+                placeholder="Meeting title"
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Description</label>
+              <textarea
+                name="description"
+                value={newSchedule.description}
+                onChange={handleInputChange}
+                placeholder="Add details about this meeting"
+              />
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Start Time*</label>
+                <input
+                  type="datetime-local"
+                  name="start_time"
+                  value={newSchedule.start_time}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>End Time*</label>
+                <input
+                  type="datetime-local"
+                  name="end_time"
+                  value={newSchedule.end_time}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Location</label>
+              <input
+                type="text"
+                name="location"
+                value={newSchedule.location}
+                onChange={handleInputChange}
+                placeholder="Meeting location"
+              />
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Project</label>
+                <select
+                  name="project_id"
+                  value={newSchedule.project_id || ""}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select a project</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name || project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Client</label>
+                <select
+                  name="client_id"
+                  value={newSchedule.client_id || ""}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select a client</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Status</label>
+              <select
+                name="status"
+                value={newSchedule.status}
+                onChange={handleInputChange}
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+          <div className={styles.modalFooter}>
+            <button
+              className={styles.cancelButton}
+              onClick={() => setShowAddModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.saveButton}
+              onClick={async () => {
+                // Validate form
+                if (
+                  !newSchedule.title ||
+                  !newSchedule.start_time ||
+                  !newSchedule.end_time
+                ) {
+                  alert("Please fill in all required fields");
+                  return;
+                }
+                try {
+                  // Add to DB
+                  const scheduleToAdd = {
+                    ...newSchedule,
+                    id: `schedule_${Date.now()}`,
+                    designer_id: userId,
+                  };
+                  const response = await api.addSchedule(scheduleToAdd);
+                  setSchedules((prev) => [...prev, response.data]);
+                  setShowAddModal(false);
+                  setNewSchedule({
+                    title: "",
+                    description: "",
+                    start_time: "",
+                    end_time: "",
+                    location: "",
+                    client_id: "",
+                    project_id: "",
+                    status: "scheduled",
+                    designer_id: userId,
+                  });
+                } catch (error) {
+                  alert("Failed to add schedule.");
+                  console.error(error);
+                }
+              }}
+              disabled={
+                !newSchedule.title ||
+                !newSchedule.start_time ||
+                !newSchedule.end_time
+              }
+            >
+              <FiSave />
+              Save Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Render view schedule modal
   const renderViewScheduleModal = () => {

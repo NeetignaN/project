@@ -238,7 +238,7 @@ function Projects({ username, role, userId }) {
                     alt={project.title}
                   />
                   <span
-                    className={`badge position-absolute top-0 end-0 m-2 ${getStatusBadgeClass(
+                    className={`badge position-absolute top-0 start-0 m-2 ${getStatusBadgeClass(
                       project.status
                     )}`}
                   >

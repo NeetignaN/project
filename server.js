@@ -375,6 +375,63 @@ app.post("/projects", async (req, res) => {
   res.status(201).json({ data: projectData });
 });
 
+//Post a new Schedule
+app.post("/schedules", async (req, res) => {
+  const db = client.db("Interiora");
+  const scheduleData = req.body;
+
+  // Generate a unique id if not provided
+  if (!scheduleData.id) {
+    scheduleData.id = "schedule_" + Date.now();
+  }
+
+  scheduleData.createdAt = new Date().toISOString();
+  scheduleData.updatedAt = new Date().toISOString();
+
+  await db.collection("schedules").insertOne(scheduleData);
+  res.status(201).json({ data: scheduleData });
+});
+
+// Update a schedule by ID
+app.patch("/schedules/:id", async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+  delete updateData._id;
+
+  try {
+    const db = client.db("Interiora");
+    const result = await db
+      .collection("schedules")
+      .updateOne({ id: id }, { $set: updateData });
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ error: "Schedule not found or no change" });
+    }
+
+    const updated = await db.collection("schedules").findOne({ id });
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Error updating schedule:", err);
+    res.status(500).json({ error: "Error updating schedule" });
+  }
+});
+
+// Delete a schedule by ID
+app.delete("/schedules/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = client.db("Interiora");
+    const result = await db.collection("schedules").deleteOne({ id: id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Schedule not found" });
+    }
+    res.json({ success: true, message: "Schedule deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting schedule:", err);
+    res.status(500).json({ error: "Error deleting schedule" });
+  }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
