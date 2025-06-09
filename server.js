@@ -432,6 +432,28 @@ app.delete("/schedules/:id", async (req, res) => {
   }
 });
 
+app.patch("/conversations/:id/messages", async (req, res) => {
+  const { id } = req.params;
+  const message = req.body;
+  try {
+    const db = client.db("Interiora");
+    const result = await db.collection("conversations").updateOne(
+      { id },
+      {
+        $push: { messages: message },
+        $set: { updatedAt: new Date().toISOString() },
+      }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Conversation not found" });
+    }
+    res.json({ success: true, message });
+  } catch (err) {
+    console.error("Error adding message:", err);
+    res.status(500).json({ error: "Failed to add message" });
+  }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);

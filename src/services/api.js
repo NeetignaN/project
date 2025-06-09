@@ -529,6 +529,28 @@ const api = {
       throw error;
     }
   },
+
+  addMessageToConversation: async (conversationId, messageObj) => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/conversations/${conversationId}/messages`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(messageObj),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to add message");
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error adding message:", error);
+      throw error;
+    }
+  },
 };
 
 export default api;

@@ -143,12 +143,12 @@ function Messages({ username, role, userId }) {
   };
 
   // Handle sending a new message
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!activeConversation || !newMessage.trim()) return;
 
     // Create new message object
     const newMessageObj = {
-      id: `msg_${Date.now()}`, // Generate a unique ID
+      id: `msg_${Date.now()}`,
       sender: userId,
       timestamp: new Date().toISOString(),
       content: newMessage.trim(),
@@ -156,21 +156,27 @@ function Messages({ username, role, userId }) {
       read_by: [userId],
     };
 
-    // Update the active conversation with the new message
+    // Update the active conversation with the new message in local state
     const updatedConversation = {
       ...activeConversation,
       messages: [...activeConversation.messages, newMessageObj],
     };
 
-    // Update the conversations state by replacing the active conversation
     const updatedConversations = conversations.map((conv) =>
       conv.id === activeConversation.id ? updatedConversation : conv
     );
 
-    // Update state
     setActiveConversation(updatedConversation);
     setConversations(updatedConversations);
-    setNewMessage(""); // Clear input
+    setNewMessage("");
+
+    // Save to DB
+    try {
+      await api.addMessageToConversation(activeConversation.id, newMessageObj);
+    } catch (error) {
+      alert("Failed to send message to server.");
+      console.error(error);
+    }
   };
 
   // Get the participant name
