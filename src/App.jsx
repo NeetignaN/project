@@ -39,6 +39,7 @@ import Vendors from "./components/Vendors.jsx";
 import VendorProducts from "./components/VendorProducts.jsx";
 import authService from "./services/authService.js";
 import ClientSignup from "./components/ClientsSignup.jsx";
+import OtpPage from "./components/OtpPage.jsx";
 
 // Main App Component
 function App() {
@@ -62,7 +63,6 @@ function AppContent() {
         setIsAuthenticated(true);
         setUsername(user.username);
         setUserRole(user.role.toLowerCase());
-        // Fix: Use user.userId instead of user.id
         setUserId(user.userId);
         setUserDetails(user.details);
       }
@@ -71,14 +71,16 @@ function AppContent() {
   }, []);
 
   function handleLoginSuccess(user, role, id, details) {
-    setIsAuthenticated(true);
+    // setIsAuthenticated(true);
     setUsername(user);
     setUserRole(role.toLowerCase());
     setUserId(id);
     setUserDetails(details);
 
-    // Redirect to respective dashboard
-    navigate(`/${role.toLowerCase()}/dashboard`, { replace: true });
+    // Redirect to OTP page after login
+    navigate("/otp", {
+      state: { email: user, userId: id, role: role.toLowerCase() },
+    });
   }
 
   function handleLogout() {
@@ -87,9 +89,7 @@ function AppContent() {
     setUsername("");
     setUserRole("");
     setUserId("");
-
     localStorage.clear();
-
     navigate("/login");
   }
 
@@ -115,6 +115,11 @@ function AppContent() {
             <Login onLoginSuccess={handleLoginSuccess} />
           )
         }
+      />
+
+      <Route
+        path="/otp"
+        element={<OtpPage onOtpSuccess={() => setIsAuthenticated(true)} />}
       />
 
       {/* Protected Routes for different roles */}

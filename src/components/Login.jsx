@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import styles from "./Login.module.css";
 import authService from "../services/authService";
@@ -12,6 +12,8 @@ function Login({ onLoginSuccess }) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const navigate = useNavigate();
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -20,20 +22,19 @@ function Login({ onLoginSuccess }) {
     try {
       // Use authService instead of direct fetch call
       const userData = await authService.login(email, password, role);
-      // console.log(email);
-      // console.log(role);
-      // console.log(password);
       console.log(userData);
 
-      // Login successful
+      // Optionally call onLoginSuccess if you need to store user info globally
       onLoginSuccess(
         userData.username,
         role,
         userData.userId,
         userData.details
       );
+
+      // Redirect to OTP page after successful login
+      navigate("/otp", { state: { email, userId: userData.userId, role } });
     } catch (err) {
-      // Display error message
       setError(err.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
