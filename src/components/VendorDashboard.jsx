@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useVendorData } from "../contexts/VendorDataContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiUser,
   FiPlus,
@@ -28,6 +28,8 @@ function VendorDashboard({ userDetails, userId, role }) {
     setDesigners,
   } = useVendorData();
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchVendorData = async () => {
@@ -170,7 +172,10 @@ function VendorDashboard({ userDetails, userId, role }) {
 
       {/* Action Buttons */}
       <div className={styles.actionButtons}>
-        <button className={styles.newProjectBtn}>
+        <button
+          className={styles.newProjectBtn}
+          onClick={() => navigate("/vendor/products")}
+        >
           <FiPlus />
           Add New Product
         </button>
