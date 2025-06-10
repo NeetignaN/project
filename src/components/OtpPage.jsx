@@ -1,100 +1,85 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Shield, AlertCircle } from "lucide-react";
 import styles from "./OtpPage.module.css";
 
 function OtpPage({ onOtpSuccess }) {
   const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const location = useLocation();
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { email, userId, role } = location.state || {};
+  const location = useLocation();
+  const { email, userId, role, sessionId } = location.state || {};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(null);
+    setIsLoading(true);
 
-    // TODO: Replace this with your real OTP verification logic
-    if (otp === "123456") {
-      if (onOtpSuccess) onOtpSuccess();
-      if (role) {
+    try {
+      const response = await fetch("http://localhost:5005/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, code: otp }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        if (onOtpSuccess) onOtpSuccess();
         navigate(`/${role}/dashboard`);
       } else {
-        navigate("/");
+        setError(data.message || "Invalid OTP. Please try again.");
       }
-    } else {
-      setError("Invalid OTP. Please try again.");
+    } catch (err) {
+      setError("Something went wrong. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setError("");
-
-  //   try {
-  //     const response = await fetch("http://localhost:5000/verify-otp", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ email, otp }),
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (response.ok && data.success) {
-  //       if (onOtpSuccess) onOtpSuccess();
-  //       if (role) {
-  //         navigate(`/${role}/dashboard`);
-  //       } else {
-  //         navigate("/");
-  //       }
-  //     } else {
-  //       setError(data.message || "Invalid OTP. Please try again.");
-  //     }
-  //   } catch (err) {
-  //     console.error("Error verifying OTP:", err);
-  //     setError("Something went wrong. Please try again later.");
-  //   }
-  // };
 
   return (
     <div className={styles.container}>
       <div className={styles.formContainer}>
-        <div>
-          <h2 className={styles.title}>Enter OTP</h2>
-          <p className={styles.subtitle}>
-            {email
-              ? `OTP sent to ${email}`
-              : "Please enter the OTP sent to your email."}
-          </p>
-        </div>
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <div className={styles.title}>Enter OTP</div>
+        <p className={styles.subtitle}>
+          {email
+            ? `OTP sent to ${email}`
+            : "Please enter the OTP sent to your email."}
+        </p>
+
+        <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
-            <div>
-              <label htmlFor="otp" className={styles.label}>
-                OTP
-              </label>
-              <input
-                id="otp"
-                name="otp"
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className={styles.input}
-                placeholder="Enter OTP"
-                required
-                autoFocus
-              />
+            <label htmlFor="otp" className={styles.label}>
+              OTP
+            </label>
+            <input
+              type="text"
+              id="otp"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className={styles.input}
+              maxLength={6}
+              placeholder="Enter 6-digit OTP"
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          {error && (
+            <div className={styles.error}>
+              <AlertCircle className={styles.errorIcon} />
+              {error}
             </div>
-          </div>
-          {error && <div className={styles.error}>{error}</div>}
-          <div>
-            <button
-              type="submit"
-              className={styles.button}
-              style={{ width: "100%" }}
-            >
-              Verify OTP
-            </button>
-          </div>
+          )}
+
+          <button
+            type="submit"
+            className={styles.button}
+            disabled={otp.length !== 6 || isLoading}
+          >
+            {isLoading ? "Verifying..." : "Verify OTP"}
+          </button>
         </form>
       </div>
     </div>

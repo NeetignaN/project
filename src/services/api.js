@@ -18,7 +18,9 @@ const api = {
       const userId = user.id;
 
       // Updated path for role-based user details
-      const detailsRes = await fetch(`${BASE_URL}/users/${role}/${userId}`);
+      const detailsRes = await fetch(
+        `${BASE_URL}/credentials/${role}/${userId}`
+      );
       if (!detailsRes.ok) {
         throw new Error("User details not found");
       }

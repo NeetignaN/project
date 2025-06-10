@@ -4,6 +4,8 @@ import express from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
 import { ObjectId } from "mongodb";
+import { createTransport } from "nodemailer";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
@@ -13,6 +15,121 @@ const client = new MongoClient(process.env.MONGO_URI);
 
 app.use(cors());
 app.use(express.json());
+
+// In-memory storage for verification codes (in production, use a database)
+const verificationCodes = new Map();
+
+// Email configuration
+const transporter = createTransport({
+  service: "gmail",
+  auth: {
+    user: "nagulaneetigna@gmail.com",
+    pass: "vlcg bnqv ffon vpxs",
+  },
+});
+
+// Generate random 6-digit code
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Send verification email
+app.post("/send-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Valid email is required" });
+    }
+
+    const verificationCode = generateVerificationCode();
+    const sessionId = uuidv4();
+
+    // Store verification code with expiration (5 minutes)
+    verificationCodes.set(sessionId, {
+      email,
+      code: verificationCode,
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+    });
+
+    const mailOptions = {
+      from: "nagulaneetigna@gmail.com",
+      to: email,
+      subject: "Email Verification Code",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">Email Verification</h1>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 15px; margin-top: -10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <p style="font-size: 16px; color: #333; margin-bottom: 25px;">
+              Hello! Here's your verification code to complete your login:
+            </p>
+            <div style="background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 10px; padding: 25px; text-align: center; margin: 25px 0;">
+              <h2 style="font-size: 36px; color: #3b82f6; margin: 0; letter-spacing: 8px; font-weight: bold;">
+                ${verificationCode}
+              </h2>
+            </div>
+            <p style="font-size: 14px; color: #666; margin-top: 25px;">
+              This code will expire in 5 minutes. If you didn't request this code, please ignore this email.
+            </p>
+          </div>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({
+      success: true,
+      message: "Verification code sent successfully",
+      sessionId,
+    });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+// Verify code
+app.post("/verify-otp", (req, res) => {
+  try {
+    const { sessionId, code } = req.body;
+
+    if (!sessionId || !code) {
+      return res
+        .status(400)
+        .json({ error: "Session ID and code are required" });
+    }
+
+    const verification = verificationCodes.get(sessionId);
+
+    if (!verification) {
+      return res.status(400).json({ error: "Invalid session or code expired" });
+    }
+
+    if (Date.now() > verification.expires) {
+      verificationCodes.delete(sessionId);
+      return res.status(400).json({ error: "Verification code has expired" });
+    }
+
+    if (verification.code !== code) {
+      return res.status(400).json({ error: "Invalid verification code" });
+    }
+
+    // Clean up
+    verificationCodes.delete(sessionId);
+
+    res.json({
+      success: true,
+      message: "Email verified successfully",
+      email: verification.email,
+    });
+  } catch (error) {
+    console.error("Error verifying code:", error);
+    res.status(500).json({ error: "Failed to verify code" });
+  }
+});
 
 // Connect to MongoDB
 async function connectDB() {
@@ -166,7 +283,7 @@ app.patch("/credentials", async (req, res) => {
 });
 
 // Role-based user fetch
-app.get("/users/:role/:userId", async (req, res) => {
+app.get("/credentials/:role/:userId", async (req, res) => {
   const { role, userId } = req.params;
   const db = client.db("Interiora");
 

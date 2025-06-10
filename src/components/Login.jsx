@@ -20,11 +20,9 @@ function Login({ onLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      // Use authService instead of direct fetch call
+      // Step 1: Authenticate user
       const userData = await authService.login(email, password, role);
-      console.log(userData);
-
-      // Optionally call onLoginSuccess if you need to store user info globally
+      // Optionally store user info globally
       onLoginSuccess(
         userData.username,
         role,
@@ -32,8 +30,27 @@ function Login({ onLoginSuccess }) {
         userData.details
       );
 
-      // Redirect to OTP page after successful login
-      navigate("/otp", { state: { email, userId: userData.userId, role } });
+      // Step 2: Send OTP
+      const otpRes = await fetch("http://localhost:5005/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const otpData = await otpRes.json();
+
+      if (!otpRes.ok || !otpData.sessionId) {
+        throw new Error(otpData.error || "Failed to send OTP");
+      }
+
+      // Step 3: Navigate to OTP page with sessionId
+      navigate("/otp", {
+        state: {
+          email,
+          userId: userData.userId,
+          role,
+          sessionId: otpData.sessionId,
+        },
+      });
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {

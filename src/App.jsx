@@ -79,7 +79,7 @@ function AppContent() {
 
     // Redirect to OTP page after login
     navigate("/otp", {
-      state: { email: user, userId: id, role: role.toLowerCase() },
+      state: { email: details.email, userId: id, role: role.toLowerCase() },
     });
   }
 
