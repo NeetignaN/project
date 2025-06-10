@@ -116,9 +116,11 @@ function DesignerDashboard({ userDetails, userId, role }) {
 
   // Calculate progress for project
   const calculateProgress = (project) => {
+    // Use project.progress if it exists, otherwise fallback to status-based logic
+    if (typeof project.progress === "number") return project.progress;
     if (project.status === "completed") return 100;
     if (project.status === "in_progress" || project.status === "active")
-      return 30; // Mock value
+      return 30; // Mock value if no progress field
     return 0;
   };
 

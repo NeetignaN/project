@@ -128,14 +128,14 @@ function AdminLayout({ onLogout, username = "Admin" }) {
               >
                 Projects
               </MenuItem>
-              <MenuItem
+              {/* <MenuItem
                 active={isActive("/admin/settings")}
                 onClick={() => setCollapsed(true)}
                 component={<Link to="/admin/settings" />}
                 icon={<FiSettings />}
               >
                 Settings
-              </MenuItem>
+              </MenuItem> */}
             </Menu>
           </div>
 

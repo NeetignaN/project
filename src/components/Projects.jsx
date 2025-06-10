@@ -21,7 +21,7 @@ function Projects({ username, role, userId }) {
     title: "",
     client_id: "",
     designer_id: userId,
-    status: "active",
+    status: "active", // or "active" if you prefer
     budget: 0,
     timeline: {
       start: new Date().toISOString().split("T")[0],
@@ -29,6 +29,7 @@ function Projects({ username, role, userId }) {
     },
     notes: "",
     moodboard: [],
+    progress: 0, // <-- Add this line
   });
 
   const [imageUrl, setImageUrl] = useState("");
@@ -141,7 +142,7 @@ function Projects({ username, role, userId }) {
         title: "",
         client_id: "",
         designer_id: userId,
-        status: "active",
+        status: "active", // or "active" if you prefer
         budget: 0,
         timeline: {
           start: new Date().toISOString().split("T")[0],
@@ -149,6 +150,7 @@ function Projects({ username, role, userId }) {
         },
         notes: "",
         moodboard: [],
+        progress: 0, // <-- Add this line
       });
     } catch (error) {
       console.error("Error adding project:", error);
@@ -391,7 +393,7 @@ function AddProjectModal({
             </Form.Select>
           </Form.Group>
 
-          <Form.Group className="mb-3">
+          {/* <Form.Group className="mb-3">
             <Form.Label>Status</Form.Label>
             <Form.Select
               name="status"
@@ -402,7 +404,7 @@ function AddProjectModal({
               <option value="completed">Completed</option>
               <option value="pending">Pending</option>
             </Form.Select>
-          </Form.Group>
+          </Form.Group> */}
 
           <Form.Group className="mb-3">
             <Form.Label>Budget</Form.Label>

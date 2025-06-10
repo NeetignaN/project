@@ -14,6 +14,7 @@ import {
   FiPhone,
   FiMapPin,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import SummaryCard from "./SummaryCard";
 import styles from "./DesignerDashboard.module.css";
 import api from "../services/api.js";
@@ -109,12 +110,12 @@ function AdminDashboard({ userDetails, userId, role }) {
   };
 
   // Calculate progress for project
-  const calculateProgress = (project) => {
-    if (project.status === "completed") return 100;
-    if (project.status === "active" || project.status === "in_progress")
-      return 50;
-    return 10;
-  };
+  // const calculateProgress = (project) => {
+  //   if (project.status === "completed") return 100;
+  //   if (project.status === "active" || project.status === "in_progress")
+  //     return 50;
+  //   return 10;
+  // };
 
   return (
     <>
@@ -168,7 +169,7 @@ function AdminDashboard({ userDetails, userId, role }) {
             </div>
           ) : (
             recentProjects.map((project) => {
-              const progress = calculateProgress(project);
+              // const progress = calculateProgress(project);
 
               return (
                 <div key={project.id} className="col-md-6 col-lg-3">
@@ -196,8 +197,8 @@ function AdminDashboard({ userDetails, userId, role }) {
                         </div>
 
                         <div className="d-flex align-items-center mb-2">
-                          <FiDollarSign className="text-muted me-2" />
-                          <span>${project.budget?.toLocaleString() || 0}</span>
+                          <FaRupeeSign className="text-muted me-2" />
+                          <span>₹{project.budget?.toLocaleString() || 0}</span>
                         </div>
 
                         <div className="d-flex align-items-center mb-2">
@@ -215,7 +216,7 @@ function AdminDashboard({ userDetails, userId, role }) {
                         )}
                       </div>
 
-                      <div className="mt-3">
+                      {/* <div className="mt-3">
                         <div className="d-flex justify-content-between mb-1">
                           <small>Progress</small>
                           <small>{progress}%</small>
@@ -225,12 +226,12 @@ function AdminDashboard({ userDetails, userId, role }) {
                             className="progress-bar bg-primary"
                             role="progressbar"
                             style={{ width: `${progress}%` }}
-                            aria-valuenow={progress}
-                            aria-valuemin="0"
+                            aria-valuenow={progress} */}
+                      {/* aria-valuemin="0"
                             aria-valuemax="100"
                           ></div>
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>

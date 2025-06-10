@@ -140,14 +140,14 @@ function ClientLayout({ onLogout, username = "User" }) {
               >
                 Schedules
               </MenuItem>
-              <MenuItem
+              {/* <MenuItem
                 active={isActive("/client/settings")}
                 onClick={() => setCollapsed(true)}
                 component={<Link to="/client/settings" />}
                 icon={<FiSettings />}
               >
                 Settings
-              </MenuItem>
+              </MenuItem> */}
             </Menu>
           </div>
 

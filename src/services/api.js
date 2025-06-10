@@ -553,6 +553,61 @@ const api = {
       throw error;
     }
   },
+
+  updateDesigner: async (designerId, updatedData) => {
+    // Update designer in designers collection
+    const response = await fetch(`${BASE_URL}/designers/${designerId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData),
+    });
+    if (!response.ok) throw new Error("Failed to update designer");
+
+    // Update designer in credentials collection
+    const credRes = await fetch(
+      `${BASE_URL}/credentials/designer/${designerId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      }
+    );
+    if (!credRes.ok) throw new Error("Failed to update designer credentials");
+
+    return await response.json();
+  },
+
+  updateVendor: async (vendorId, updatedData) => {
+    // Update vendor in vendors collection
+    const response = await fetch(`${BASE_URL}/vendors/${vendorId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData),
+    });
+    if (!response.ok) throw new Error("Failed to update vendor");
+
+    // Update vendor in credentials collection
+    const credRes = await fetch(`${BASE_URL}/credentials/vendor/${vendorId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData),
+    });
+    if (!credRes.ok) throw new Error("Failed to update vendor credentials");
+
+    return await response.json();
+  },
+
+  updateClient: async (clientId, updatedData) => {
+    // Update client in clients collection
+    const response = await fetch(`${BASE_URL}/clients/${clientId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData),
+    });
+    if (!response.ok) throw new Error("Failed to update client");
+
+    return await response.json();
+  },
 };
 
 export default api;

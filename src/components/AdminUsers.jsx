@@ -119,7 +119,7 @@ function AdminUsers({ userId, role }) {
         displayName: client.name || client.contact_person || "Unknown Client",
         email: client.email || "N/A",
         phone: client.phone || "N/A",
-        address: client.company?.address || "N/A",
+        address: client.company?.address || client.address || "N/A",
       }));
       combined = [...combined, ...processedClients];
     }
@@ -194,7 +194,7 @@ function AdminUsers({ userId, role }) {
           displayName: client.name || client.contact_person || "Unknown Client",
           email: client.email || "N/A",
           phone: client.phone || "N/A",
-          address: client.company?.address || "N/A",
+          address: client.company?.address || client.address || "N/A",
         })),
       ];
     }
@@ -313,7 +313,7 @@ function AdminUsers({ userId, role }) {
         company_name: "",
       });
       setShowCreateModal(false);
-      // Optionally refresh  here
+      // Optionally refresh here
     } catch (err) {
       setFormError(err.message || "Failed to create user.");
     } finally {
@@ -346,17 +346,31 @@ function AdminUsers({ userId, role }) {
         return;
       }
 
-      // Call appropriate API based on user type
       if (editUser.userType === "designer") {
-        await api.updateProject(editUser.id, {
+        await api.updateDesigner(editUser.id, {
           name: editUser.displayName,
           email: editUser.email,
           phone: editUser.phone,
           address: editUser.address,
         });
         setEditFormSuccess("Designer updated successfully!");
+        setDesigners((prev) => {
+          const updated = prev.map((d) =>
+            d.id === editUser.id
+              ? {
+                  ...d,
+                  name: editUser.displayName,
+                  email: editUser.email,
+                  phone: editUser.phone,
+                  address: editUser.address,
+                }
+              : d
+          );
+          localStorage.setItem("designers", JSON.stringify(updated));
+          return updated;
+        });
       } else if (editUser.userType === "vendor") {
-        await api.updateProject(editUser.id, {
+        await api.updateVendor(editUser.id, {
           company_name: editUser.company_name,
           name: editUser.displayName,
           email: editUser.email,
@@ -364,18 +378,58 @@ function AdminUsers({ userId, role }) {
           address: editUser.address,
         });
         setEditFormSuccess("Vendor updated successfully!");
+        setVendors((prev) => {
+          const updated = prev.map((v) =>
+            v.id === editUser.id
+              ? {
+                  ...v,
+                  company_name: editUser.company_name,
+                  name: editUser.displayName,
+                  email: editUser.email,
+                  phone: editUser.phone,
+                  address: editUser.address,
+                }
+              : v
+          );
+          localStorage.setItem("vendors", JSON.stringify(updated));
+          return updated;
+        });
       } else if (editUser.userType === "client") {
-        await api.updateProject(editUser.id, {
+        // Update both top-level address and company.address
+        await api.updateClient(editUser.id, {
           name: editUser.displayName,
           email: editUser.email,
           phone: editUser.phone,
           address: editUser.address,
+          company: editUser.company
+            ? { ...editUser.company, address: editUser.address }
+            : { address: editUser.address },
         });
         setEditFormSuccess("Client updated successfully!");
+        setClients((prev) => {
+          const updated = prev.map((c) =>
+            c.id === editUser.id
+              ? {
+                  ...c,
+                  name: editUser.displayName,
+                  email: editUser.email,
+                  phone: editUser.phone,
+                  address: editUser.address,
+                  company: c.company
+                    ? { ...c.company, address: editUser.address }
+                    : { address: editUser.address },
+                }
+              : c
+          );
+          localStorage.setItem("clients", JSON.stringify(updated));
+          return updated;
+        });
       }
 
-      setShowEditModal(false);
-      // Optionally refresh users here
+      setTimeout(() => {
+        setEditFormSuccess("");
+        setShowEditModal(false);
+      }, 1500);
     } catch (err) {
       setEditFormError(err.message || "Failed to update user.");
     } finally {

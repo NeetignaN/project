@@ -184,7 +184,7 @@ function Clients({ username, role, userId }) {
       </div>
 
       <div className="row g-4">
-        {clients.map((client) => {
+        {clients.map((client, idx) => {
           if (!client) return null; // Defensive: skip undefined/null clients
           const initials = client.name
             ? client.name
@@ -213,7 +213,9 @@ function Clients({ username, role, userId }) {
                       )}
                     </div>
                     <div>
-                      <h5 className="card-title mb-0">{client.name}</h5>
+                      <h5 className="card-title mb-0">
+                        #{idx + 1} {client.name}
+                      </h5>
                       <p className="card-subtitle text-muted small">
                         {client.company?.name || ""}
                       </p>
@@ -405,7 +407,64 @@ function AddClientModal({
 
 // Component for the Client Details Modal
 function ClientDetailsModal({ show, onHide, client, clientProjects }) {
-  // Format date helper
+  const { clients, setClients } = useDesignerData(); // <-- Added this line
+  const [isEditing, setIsEditing] = useState(false);
+  const [editClient, setEditClient] = useState(client);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    setEditClient(client);
+    setIsEditing(false);
+    setError("");
+    setSuccess("");
+  }, [client, show]);
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    if (name.startsWith("company.")) {
+      const [, field] = name.split(".");
+      setEditClient((prev) => ({
+        ...prev,
+        company: { ...prev.company, [field]: value },
+      }));
+    } else {
+      setEditClient((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      // Don't allow email to be changed
+      const { email, ...updateData } = editClient;
+      const response = await api.updateClient(client.id, updateData);
+
+      // Update client in state
+      setClients((prev) =>
+        prev.map((c) =>
+          c.id === client.id ? { ...c, ...updateData, email: c.email } : c
+        )
+      );
+
+      // Update selectedClient so modal shows new data
+      setEditClient((prev) => ({ ...prev, ...updateData }));
+
+      setSuccess("Client updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      setError("Failed to update client.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -440,8 +499,32 @@ function ClientDetailsModal({ show, onHide, client, clientProjects }) {
             )}
           </div>
           <div>
-            <h4 className="mb-1">{client.name}</h4>
-            <p className="text-muted mb-0">{client.company?.name || ""}</p>
+            <h4 className="mb-1">
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="name"
+                  value={editClient.name}
+                  onChange={handleEditChange}
+                  className="form-control"
+                />
+              ) : (
+                client.name
+              )}
+            </h4>
+            <p className="text-muted mb-0">
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="company.name"
+                  value={editClient.company?.name || ""}
+                  onChange={handleEditChange}
+                  className="form-control"
+                />
+              ) : (
+                client.company?.name || ""
+              )}
+            </p>
           </div>
         </div>
 
@@ -453,47 +536,81 @@ function ClientDetailsModal({ show, onHide, client, clientProjects }) {
                   <label className="fw-bold mb-1">Email</label>
                   <div className="d-flex align-items-center">
                     <FiMail className="text-muted me-2" />
-                    <a href={`mailto:${client.email}`}>{client.email}</a>
+                    <span>{client.email}</span>
                   </div>
                 </div>
 
-                {client.phone && (
-                  <div className="mb-3">
-                    <label className="fw-bold mb-1">Phone</label>
-                    <div className="d-flex align-items-center">
-                      <FiPhone className="text-muted me-2" />
-                      <a href={`tel:${client.phone}`}>{client.phone}</a>
-                    </div>
+                <div className="mb-3">
+                  <label className="fw-bold mb-1">Phone</label>
+                  <div className="d-flex align-items-center">
+                    <FiPhone className="text-muted me-2" />
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="phone"
+                        value={editClient.phone || ""}
+                        onChange={handleEditChange}
+                        className="form-control"
+                      />
+                    ) : (
+                      <span>{client.phone}</span>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {client.contact_person && (
-                  <div className="mb-3">
-                    <label className="fw-bold mb-1">Contact Person</label>
-                    <div className="d-flex align-items-center">
-                      <FiUser className="text-muted me-2" />
+                <div className="mb-3">
+                  <label className="fw-bold mb-1">Contact Person</label>
+                  <div className="d-flex align-items-center">
+                    <FiUser className="text-muted me-2" />
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="contact_person"
+                        value={editClient.contact_person || ""}
+                        onChange={handleEditChange}
+                        className="form-control"
+                      />
+                    ) : (
                       <span>{client.contact_person}</span>
-                    </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
 
               <div className="col-md-6">
-                {client.company?.address && (
-                  <div className="mb-3">
-                    <label className="fw-bold mb-1">Address</label>
-                    <div className="d-flex align-items-center">
-                      <FiMapPin className="text-muted me-2" />
-                      <span>{client.company.address}</span>
-                    </div>
+                <div className="mb-3">
+                  <label className="fw-bold mb-1">Address</label>
+                  <div className="d-flex align-items-center">
+                    <FiMapPin className="text-muted me-2" />
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="company.address"
+                        value={editClient.company?.address || ""}
+                        onChange={handleEditChange}
+                        className="form-control"
+                      />
+                    ) : (
+                      <span>{client.company?.address}</span>
+                    )}
                   </div>
-                )}
+                </div>
 
                 <div className="mb-3">
                   <label className="fw-bold mb-1">Total Spend</label>
                   <div className="d-flex align-items-center">
                     <FiDollarSign className="text-muted me-2" />
-                    <span>${client.total_spend?.toLocaleString() || 0}</span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        name="total_spend"
+                        value={editClient.total_spend || 0}
+                        onChange={handleEditChange}
+                        className="form-control"
+                      />
+                    ) : (
+                      <span>${client.total_spend?.toLocaleString() || 0}</span>
+                    )}
                   </div>
                 </div>
 
@@ -509,6 +626,10 @@ function ClientDetailsModal({ show, onHide, client, clientProjects }) {
                 </div>
               </div>
             </div>
+            {error && <div className="alert alert-danger mt-2">{error}</div>}
+            {success && (
+              <div className="alert alert-success mt-2">{success}</div>
+            )}
           </Tab>
 
           <Tab eventKey="projects" title="Projects">
@@ -582,10 +703,32 @@ function ClientDetailsModal({ show, onHide, client, clientProjects }) {
         </Tabs>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>
+        <Button variant="secondary" onClick={onHide} disabled={saving}>
           Close
         </Button>
-        <Button variant="primary">Edit Client</Button>
+        {isEditing ? (
+          <>
+            <Button variant="success" onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+            <Button
+              variant="outline-secondary"
+              onClick={() => {
+                setIsEditing(false);
+                setEditClient(client);
+                setError("");
+                setSuccess("");
+              }}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <Button variant="primary" onClick={() => setIsEditing(true)}>
+            Edit Client
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );

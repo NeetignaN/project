@@ -159,14 +159,14 @@ function DesignerLayout({ onLogout, username = "User" }) {
               >
                 Schedules
               </MenuItem>
-              <MenuItem
+              {/* <MenuItem
                 active={isActive("/designer/settings")}
                 onClick={() => setCollapsed(true)}
                 component={<Link to="/designer/settings" />}
                 icon={<FiSettings />}
               >
                 Settings
-              </MenuItem>
+              </MenuItem> */}
             </Menu>
           </div>
 

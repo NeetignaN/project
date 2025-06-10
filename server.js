@@ -571,6 +571,119 @@ app.patch("/conversations/:id/messages", async (req, res) => {
   }
 });
 
+// PATCH Designer (update in both designers and credentials)
+app.patch("/designers/:id", async (req, res) => {
+  const db = client.db("Interiora");
+  const { id } = req.params;
+  const updateData = req.body;
+
+  try {
+    // Update designers collection
+    await db.collection("designers").updateOne({ id }, { $set: updateData });
+
+    // Update credentials collection (only fields that exist in credentials)
+    await db
+      .collection("credentials")
+      .updateOne({ id, role: "designer" }, { $set: updateData });
+
+    res.json({ success: true, message: "Designer updated" });
+  } catch (err) {
+    console.error("❌ Error updating designer:", err);
+    res.status(500).json({ error: "Failed to update designer" });
+  }
+});
+
+// PATCH Client (update in both clients and credentials)
+// app.patch("/clients/:id", async (req, res) => {
+//   const db = client.db("Interiora");
+//   const { id } = req.params;
+//   const updateData = req.body;
+
+//   try {
+//     await db.collection("clients").updateOne({ id }, { $set: updateData });
+//     await db
+//       .collection("credentials")
+//       .updateOne({ id, role: "client" }, { $set: updateData });
+//     res.json({ success: true, message: "Client updated" });
+//   } catch (err) {
+//     console.error("❌ Error updating client:", err);
+//     res.status(500).json({ error: "Failed to update client" });
+//   }
+// });
+
+// PATCH Vendor (update in both vendors and credentials)
+app.patch("/vendors/:id", async (req, res) => {
+  const db = client.db("Interiora");
+  const { id } = req.params;
+  const updateData = req.body;
+
+  try {
+    await db.collection("vendors").updateOne({ id }, { $set: updateData });
+    await db
+      .collection("credentials")
+      .updateOne({ id, role: "vendor" }, { $set: updateData });
+    res.json({ success: true, message: "Vendor updated" });
+  } catch (err) {
+    console.error("❌ Error updating vendor:", err);
+    res.status(500).json({ error: "Failed to update vendor" });
+  }
+});
+
+app.patch("/clients/:id", async (req, res) => {
+  const db = client.db("Interiora");
+  const { id } = req.params;
+  const updateData = req.body;
+
+  try {
+    // Remove _id if present
+    let updateObj = { ...updateData };
+    if (updateObj._id) delete updateObj._id;
+
+    // Flatten company fields for MongoDB dot notation
+    if (updateData.company && typeof updateData.company === "object") {
+      for (const key in updateData.company) {
+        updateObj[`company.${key}`] = updateData.company[key];
+      }
+      delete updateObj.company;
+    }
+
+    // (Optional) Remove any other nested objects that shouldn't be updated directly
+
+    // Debug: log the update object
+    console.log("Updating client:", id, updateObj);
+
+    // Update clients collection
+    const result = await db
+      .collection("clients")
+      .updateOne({ id }, { $set: updateObj });
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+
+    // Update credentials collection (only fields that exist in credentials)
+    const credUpdate = {};
+    if (updateData.name) credUpdate.name = updateData.name;
+    if (updateData.phone) credUpdate.phone = updateData.phone;
+    if (updateData.contact_person)
+      credUpdate.contact_person = updateData.contact_person;
+    if (updateData.total_spend !== undefined)
+      credUpdate.total_spend = updateData.total_spend;
+    if (updateData.avatar) credUpdate.avatar = updateData.avatar;
+
+    if (Object.keys(credUpdate).length > 0) {
+      await db
+        .collection("credentials")
+        .updateOne({ id, role: "client" }, { $set: credUpdate });
+    }
+
+    res.json({ success: true, message: "Client updated" });
+  } catch (err) {
+    console.error("❌ Error updating client:", err);
+    res.status(500).json({ error: "Failed to update client" });
+  }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);

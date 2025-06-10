@@ -37,7 +37,7 @@ function AdminSettings({ userId, role }) {
         <div className="col-md-3 mb-4 mb-md-0">
           <div className="card shadow-sm">
             <div className="list-group list-group-flush">
-              <button
+              {/* <button
                 className={`list-group-item list-group-item-action d-flex align-items-center gap-2 ${
                   activeTab === "general" ? "active" : ""
                 }`}
@@ -45,8 +45,8 @@ function AdminSettings({ userId, role }) {
               >
                 <FiGlobe />
                 General Settings
-              </button>
-              <button
+              </button> */}
+              {/* <button
                 className={`list-group-item list-group-item-action d-flex align-items-center gap-2 ${
                   activeTab === "profile" ? "active" : ""
                 }`}
@@ -63,7 +63,7 @@ function AdminSettings({ userId, role }) {
               >
                 <FiLock />
                 Password
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

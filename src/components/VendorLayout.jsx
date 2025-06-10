@@ -140,14 +140,14 @@ function VendorLayout({ onLogout, username = "User" }) {
               >
                 Schedules
               </MenuItem>
-              <MenuItem
+              {/* <MenuItem
                 active={isActive("/vendor/settings")}
                 onClick={() => setCollapsed(true)}
                 component={<Link to="/vendor/settings" />}
                 icon={<FiSettings />}
               >
                 Settings
-              </MenuItem>
+              </MenuItem> */}
             </Menu>
           </div>
 
