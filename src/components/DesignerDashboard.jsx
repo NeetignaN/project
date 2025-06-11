@@ -9,13 +9,13 @@ import {
   FiBarChart2,
   FiClock,
   FiFolder,
-  FiDollarSign,
   FiMail,
   FiPhone,
   FiMapPin,
   FiArrowRight,
   FiCheck,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import SummaryCard from "./SummaryCard";
 import styles from "./DesignerDashboard.module.css";
 import api from "../services/api.js";
@@ -231,8 +231,8 @@ function DesignerDashboard({ userDetails, userId, role }) {
                         </div>
 
                         <div className="d-flex align-items-center mb-2">
-                          <FiDollarSign className="text-muted me-2" />
-                          <span>${project.budget?.toLocaleString() || 0}</span>
+                          <FaRupeeSign className="text-muted me-2" />
+                          <span>₹{project.budget?.toLocaleString() || 0}</span>
                         </div>
 
                         <div className="d-flex align-items-center mb-2">
@@ -379,7 +379,7 @@ function DesignerDashboard({ userDetails, userId, role }) {
                     <div className="card-footer bg-white border-top-0">
                       <div className="d-flex justify-content-between align-items-center">
                         <span className="badge bg-light text-dark">
-                          ${client.total_spend?.toLocaleString() || 0}
+                          ₹{client.total_spend?.toLocaleString() || 0}
                         </span>
                         <button
                           onClick={() => handleViewClientDetails(client)}

@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAdminData } from "../contexts/AdminDataContext";
-import {
-  FiSearch,
-  FiEye,
-  FiTrash2,
-  FiCalendar,
-  FiDollarSign,
-  FiClock,
-} from "react-icons/fi";
+import { FiSearch, FiEye, FiTrash2, FiCalendar, FiClock } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import styles from "./Projects.module.css";
 import api from "../services/api.js";
 import ProjectDetails from "./ProjectDetails";
@@ -358,7 +352,7 @@ function AdminProjects({ userId, role }) {
                     </td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <FiDollarSign className="text-muted me-1" size={14} />
+                        <FaRupeeSign className="text-muted me-1" size={14} />
                         <span>{project.budget?.toLocaleString() || 0}</span>
                       </div>
                     </td>

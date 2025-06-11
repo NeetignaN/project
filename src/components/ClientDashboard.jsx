@@ -6,12 +6,12 @@ import {
   FiCalendar,
   FiBarChart2,
   FiClock,
-  FiDollarSign,
   FiArrowRight,
   FiCheck,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import SummaryCard from "./SummaryCard";
-import styles from "./DesignerDashboard.module.css"; // Reusing the same styles for now
+import styles from "./DesignerDashboard.module.css";
 import api from "../services/api.js";
 
 function ClientDashboard({ userDetails, userId, role }) {
@@ -154,7 +154,7 @@ function ClientDashboard({ userDetails, userId, role }) {
 
                       <div className="mb-3">
                         <div className="d-flex align-items-center mb-2">
-                          <FiDollarSign className="text-muted me-2" />
+                          <FaRupeeSign className="text-muted me-2" />
                           <span>${project.budget?.toLocaleString() || 0}</span>
                         </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Row, Col, Badge, Form } from "react-bootstrap";
-import { FiCalendar, FiClock, FiDollarSign, FiPlus, FiX } from "react-icons/fi";
+import { FiCalendar, FiClock, FiPlus, FiX } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import styles from "./ProjectDetails.module.css";
 import api from "../services/api";
 
@@ -152,7 +153,7 @@ function ProjectDetails({
               </div>
 
               <div className="d-flex align-items-center mb-2">
-                <FiDollarSign className="text-muted me-2" />
+                <FaRupeeSign className="text-muted me-2" />
                 {editMode ? (
                   <Form.Control
                     type="number"
@@ -162,7 +163,7 @@ function ProjectDetails({
                     disabled={readOnly}
                   />
                 ) : (
-                  <span>Budget: ${project.budget?.toLocaleString() || 0}</span>
+                  <span>Budget: ₹{project.budget?.toLocaleString() || 0}</span>
                 )}
               </div>
 

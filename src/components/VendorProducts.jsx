@@ -5,7 +5,6 @@ import {
   FiPlus,
   FiEdit2,
   FiTrash2,
-  FiDollarSign,
   FiPackage,
   FiInfo,
   FiBarChart2,
@@ -271,7 +270,7 @@ function VendorProducts({ username, userId, role }) {
                 </div>
                 <div className={styles.productMeta}>
                   <div className={styles.productPrice}>
-                    <FiDollarSign /> {product.price.toLocaleString()} /{" "}
+                    <FaRupeeSign /> {product.price.toLocaleString()} /{" "}
                     {product.unit}
                   </div>
                   <div className={styles.productCategory}>

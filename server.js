@@ -647,11 +647,6 @@ app.patch("/clients/:id", async (req, res) => {
       delete updateObj.company;
     }
 
-    // (Optional) Remove any other nested objects that shouldn't be updated directly
-
-    // Debug: log the update object
-    console.log("Updating client:", id, updateObj);
-
     // Update clients collection
     const result = await db
       .collection("clients")

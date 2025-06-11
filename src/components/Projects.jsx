@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api.js";
-import { FiCalendar, FiClock, FiDollarSign, FiPlus, FiX } from "react-icons/fi";
+import { FiCalendar, FiClock, FiPlus, FiX } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Projects.module.css";
 import { useDesignerData } from "../contexts/DesignerDataContext";
@@ -261,8 +262,8 @@ function Projects({ username, role, userId }) {
                     </div>
 
                     <div className="d-flex align-items-center mb-2">
-                      <FiDollarSign className="text-muted me-2" />
-                      <span>${project.budget?.toLocaleString() || 0}</span>
+                      <FaRupeeSign className="text-muted me-2" />
+                      <span>₹{project.budget?.toLocaleString() || 0}</span>
                     </div>
 
                     <div className="d-flex align-items-center mb-2">

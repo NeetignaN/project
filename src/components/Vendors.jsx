@@ -432,7 +432,7 @@ function Vendors({ username, role, userId }) {
                         <div className={styles.productHeader}>
                           <h3 className={styles.productName}>{product.name}</h3>
                           <div className={styles.productPrice}>
-                            ${product.price.toFixed(2)}
+                            ₹{product.price.toFixed(2)}
                           </div>
                         </div>
 

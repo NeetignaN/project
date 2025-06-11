@@ -8,7 +8,6 @@ import {
   FiFolder,
   FiArrowRight,
   FiCalendar,
-  FiDollarSign,
   FiClock,
   FiMail,
   FiPhone,

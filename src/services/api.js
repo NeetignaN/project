@@ -564,15 +564,15 @@ const api = {
     if (!response.ok) throw new Error("Failed to update designer");
 
     // Update designer in credentials collection
-    const credRes = await fetch(
-      `${BASE_URL}/credentials/designer/${designerId}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData),
-      }
-    );
-    if (!credRes.ok) throw new Error("Failed to update designer credentials");
+    // const credRes = await fetch(
+    //   `${BASE_URL}/credentials/designer/${designerId}`,
+    //   {
+    //     method: "PATCH",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(updatedData),
+    //   }
+    // );
+    // if (!credRes.ok) throw new Error("Failed to update designer credentials");
 
     return await response.json();
   },
@@ -587,14 +587,14 @@ const api = {
     if (!response.ok) throw new Error("Failed to update vendor");
 
     // Update vendor in credentials collection
-    const credRes = await fetch(`${BASE_URL}/credentials/vendor/${vendorId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedData),
-    });
-    if (!credRes.ok) throw new Error("Failed to update vendor credentials");
+    // const credRes = await fetch(`${BASE_URL}/credentials/vendor/${vendorId}`, {
+    //   method: "PATCH",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(updatedData),
+    // });
+    // if (!credRes.ok) throw new Error("Failed to update vendor credentials");
 
-    return await response.json();
+    // return await response.json();
   },
 
   updateClient: async (clientId, updatedData) => {

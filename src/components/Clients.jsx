@@ -8,11 +8,11 @@ import {
   FiFolder,
   FiPlus,
   FiCalendar,
-  FiDollarSign,
   FiClock,
   FiFileText,
   FiX,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Clients.module.css";
 import { useDesignerData } from "../contexts/DesignerDataContext";
@@ -263,7 +263,7 @@ function Clients({ username, role, userId }) {
                 <div className="card-footer bg-white border-top-0">
                   <div className="d-flex justify-content-between align-items-center">
                     <span className="badge bg-light text-dark">
-                      ${client.total_spend?.toLocaleString() || 0}
+                      ₹{client.total_spend?.toLocaleString() || 0}
                     </span>
                     <button
                       className="btn btn-sm btn-outline-primary"
@@ -599,7 +599,7 @@ function ClientDetailsModal({ show, onHide, client, clientProjects }) {
                 <div className="mb-3">
                   <label className="fw-bold mb-1">Total Spend</label>
                   <div className="d-flex align-items-center">
-                    <FiDollarSign className="text-muted me-2" />
+                    <FaRupeeSign className="text-muted me-2" />
                     {isEditing ? (
                       <input
                         type="number"
@@ -609,7 +609,7 @@ function ClientDetailsModal({ show, onHide, client, clientProjects }) {
                         className="form-control"
                       />
                     ) : (
-                      <span>${client.total_spend?.toLocaleString() || 0}</span>
+                      <span>₹{client.total_spend?.toLocaleString() || 0}</span>
                     )}
                   </div>
                 </div>
@@ -668,9 +668,9 @@ function ClientDetailsModal({ show, onHide, client, clientProjects }) {
                           </div>
 
                           <div className="d-flex align-items-center mb-2">
-                            <FiDollarSign className="text-muted me-2" />
+                            <FaRupeeSign className="text-muted me-2" />
                             <span>
-                              ${project.budget?.toLocaleString() || 0}
+                              ₹{project.budget?.toLocaleString() || 0}
                             </span>
                           </div>
                         </div>
