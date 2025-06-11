@@ -41,3 +41,17 @@ Client signs up	credentials	Client	Password is set if invited and not already re
 Client logs in	credentials	Client	Login allowed if email and password match
 Client deleted	clients, credentials	Admin/Designer	Client and their credentials are removed
 This flow ensures only invited clients can sign up and log in, and prevents duplicate or unauthorized accounts.
+
+
+
+
+
+
+vemdor portal , add deleteing of projects and clients functionality to designer and chnage all dollars to ruppess
+
+import { FaRupeeSign } from "react-icons/fa";
+
+<div className="d-flex align-items-center mb-2">
+                          <FaRupeeSign className="text-muted me-2" />
+                          <span>₹{project.budget?.toLocaleString() || 0}</span>
+                        </div>
