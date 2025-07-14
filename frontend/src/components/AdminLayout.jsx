@@ -10,7 +10,7 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import styles from "./DesignerLayout.module.css";
-import logo from "../assets/Logo.png"; // Fixed case sensitivity
+import logo from "../assets/Logo.png";
 
 function AdminLayout({ onLogout, username = "Admin" }) {
   const [collapsed, setCollapsed] = useState(true);

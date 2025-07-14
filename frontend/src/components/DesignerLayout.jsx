@@ -13,7 +13,7 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import styles from "./DesignerLayout.module.css";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png";
 console.log("Logo path:", logo);
 
 function DesignerLayout({ onLogout, username = "User" }) {

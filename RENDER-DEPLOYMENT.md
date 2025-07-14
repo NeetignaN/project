@@ -91,7 +91,7 @@ VITE_API_URL=https://your-backend-service.onrender.com/api
 3. Click **"New"** → **"Static Site"**
 4. Connect same GitHub repository
 5. Configure:
-   - **Name:** `interiora-frontend`
+   - **Name:** `interiora`
    - **Root Directory:** `frontend`
    - **Build Command:** `npm run build` - **Publish Directory:** `dist`
 6. Add environment variables if needed
@@ -124,7 +124,7 @@ git push origin main
 ## 🌐 **URLs After Deployment:**
 
 - **Backend API:** `https://interiora-backend.onrender.com`
-- **Frontend:** `https://interiora-frontend.onrender.com`
+- **Frontend:** `https://interiora.onrender.com`
 
 ## ⚙️ **Auto-Deploy Setup:**
 

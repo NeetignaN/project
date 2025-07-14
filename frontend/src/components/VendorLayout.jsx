@@ -11,7 +11,7 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import styles from "./DesignerLayout.module.css"; // Reusing designer layout styles
-import logo from "../assets/Logo.png"; // Updated path with correct casing
+import logo from "../assets/Logo.png";
 
 function VendorLayout({ onLogout, username = "User" }) {
   const [collapsed, setCollapsed] = useState(true);
