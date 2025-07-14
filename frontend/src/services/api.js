@@ -1,6 +1,6 @@
 const BASE_URL =
   process.env.NODE_ENV === "production"
-    ? "https://your-backend-service.onrender.com/api"
+    ? "https://interiora-backend.onrender.com/api"
     : "http://localhost:5005/api";
 
 const api = {
