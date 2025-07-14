@@ -12,18 +12,13 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build:frontend": "cd frontend && npm run build",
     "start:backend": "cd backend && npm start",
-    "start": "npm run start:backend"
+    "start": "npm run start:backend",
+    "deploy:build": "npm run install:all && npm run build:frontend"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "keywords": [
-    "interior-design",
-    "react",
-    "express",
-    "mongodb",
-    "full-stack"
-  ],
+  "keywords": ["interior-design", "react", "express", "mongodb", "full-stack"],
   "author": "Interiora Team",
   "license": "MIT"
 }
